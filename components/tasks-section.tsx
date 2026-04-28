@@ -4,7 +4,10 @@ import { ChangeEvent, FormEvent, useState } from "react";
 import {
   defaultTaskFormValues,
   formatLabel,
+  formatTaskContextLabel,
+  partialProgressOptions,
   priorityOptions,
+  readinessOptions,
   taskContextOptions,
   Task,
   TaskFormValues,
@@ -13,9 +16,14 @@ import {
 type TasksSectionProps = {
   tasks: Task[];
   setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
+  onResetSampleTasks: () => void;
 };
 
-export function TasksSection({ tasks, setTasks }: TasksSectionProps) {
+export function TasksSection({
+  tasks,
+  setTasks,
+  onResetSampleTasks,
+}: TasksSectionProps) {
   const [formValues, setFormValues] = useState<TaskFormValues>(defaultTaskFormValues);
   const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
 
@@ -50,8 +58,10 @@ export function TasksSection({ tasks, setTasks }: TasksSectionProps) {
       duration: Number(formValues.duration),
       urgency: formValues.urgency,
       importance: formValues.importance,
-      energyRequired: formValues.energyRequired,
+      focusRequired: formValues.focusRequired,
       contextTag: formValues.contextTag,
+      readiness: formValues.readiness,
+      canBeDoneInParts: formValues.canBeDoneInParts,
     };
 
     if (editingTaskId !== null) {
@@ -72,8 +82,10 @@ export function TasksSection({ tasks, setTasks }: TasksSectionProps) {
       duration: String(task.duration),
       urgency: task.urgency,
       importance: task.importance,
-      energyRequired: task.energyRequired,
+      focusRequired: task.focusRequired,
       contextTag: task.contextTag,
+      readiness: task.readiness,
+      canBeDoneInParts: task.canBeDoneInParts,
     });
   }
 
@@ -89,9 +101,11 @@ export function TasksSection({ tasks, setTasks }: TasksSectionProps) {
     <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
       <div className="flex flex-col gap-5">
         <div className="space-y-1.5">
-          <h2 className="text-lg font-semibold text-slate-900">Tasks</h2>
+          <h2 className="text-xl font-semibold text-slate-950">
+            Step 1: Add or review your tasks
+          </h2>
           <p className="text-sm text-slate-500">
-            Add, update, or remove tasks for the day.
+            Start by listing the tasks you want WhatNext to consider.
           </p>
         </div>
 
@@ -138,15 +152,16 @@ export function TasksSection({ tasks, setTasks }: TasksSectionProps) {
 
               <SelectField
                 id="contextTag"
-                label="Context tag"
+                label="Where can you do this?"
                 name="contextTag"
                 options={taskContextOptions}
                 value={formValues.contextTag}
                 onChange={handleInputChange}
+                getOptionLabel={formatTaskContextLabel}
               />
             </div>
 
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2">
               <SelectField
                 id="urgency"
                 label="Urgency"
@@ -166,11 +181,31 @@ export function TasksSection({ tasks, setTasks }: TasksSectionProps) {
               />
 
               <SelectField
-                id="energyRequired"
-                label="Energy"
-                name="energyRequired"
+                id="focusRequired"
+                label="Focus required"
+                name="focusRequired"
                 options={priorityOptions}
-                value={formValues.energyRequired}
+                value={formValues.focusRequired}
+                onChange={handleInputChange}
+              />
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <SelectField
+                id="readiness"
+                label="Can this be done now?"
+                name="readiness"
+                options={readinessOptions}
+                value={formValues.readiness}
+                onChange={handleInputChange}
+              />
+
+              <SelectField
+                id="canBeDoneInParts"
+                label="Can be done in parts?"
+                name="canBeDoneInParts"
+                options={partialProgressOptions}
+                value={formValues.canBeDoneInParts}
                 onChange={handleInputChange}
               />
             </div>
@@ -198,10 +233,24 @@ export function TasksSection({ tasks, setTasks }: TasksSectionProps) {
 
         <div className="space-y-3 border-t border-slate-100 pt-5">
           <div className="flex items-center justify-between gap-3">
-            <h3 className="text-sm font-semibold text-slate-900">Task list</h3>
-            <p className="text-xs text-slate-500">
-              {tasks.length} {tasks.length === 1 ? "task" : "tasks"}
-            </p>
+            <div className="space-y-1">
+              <h3 className="text-sm font-semibold text-slate-900">Task list</h3>
+              <p className="text-xs text-slate-500">
+                Blocked tasks stay visible, but they are skipped for recommendations.
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <p className="text-xs text-slate-500">
+                {tasks.length} {tasks.length === 1 ? "task" : "tasks"}
+              </p>
+              <button
+                type="button"
+                onClick={onResetSampleTasks}
+                className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50"
+              >
+                Reset sample tasks
+              </button>
+            </div>
           </div>
 
           {tasks.map((task) => (
@@ -236,8 +285,19 @@ export function TasksSection({ tasks, setTasks }: TasksSectionProps) {
                   <TaskTag label={`${task.duration} min`} />
                   <TaskTag label={`Urgency: ${task.urgency}`} />
                   <TaskTag label={`Importance: ${task.importance}`} />
-                  <TaskTag label={`Energy: ${task.energyRequired}`} />
-                  <TaskTag label={`Context: ${task.contextTag}`} />
+                  <TaskTag label={`Focus: ${task.focusRequired}`} />
+                  <TaskTag label={formatTaskContextLabel(task.contextTag)} />
+                  <TaskTag
+                    label={
+                      task.canBeDoneInParts === "yes"
+                        ? "Can be done in parts"
+                        : "Needs full session"
+                    }
+                  />
+                  <TaskTag
+                    label={task.readiness === "ready" ? "Ready" : "Blocked"}
+                    tone={task.readiness}
+                  />
                 </div>
               </div>
             </article>
@@ -255,6 +315,7 @@ type SelectFieldProps<T extends string> = {
   options: T[];
   value: T;
   onChange: (event: ChangeEvent<HTMLSelectElement>) => void;
+  getOptionLabel?: (option: T) => string;
 };
 
 function SelectField<T extends string>({
@@ -264,6 +325,7 @@ function SelectField<T extends string>({
   options,
   value,
   onChange,
+  getOptionLabel,
 }: SelectFieldProps<T>) {
   return (
     <FormField>
@@ -277,7 +339,7 @@ function SelectField<T extends string>({
       >
         {options.map((option) => (
           <option key={option} value={option}>
-            {formatLabel(option)}
+            {getOptionLabel ? getOptionLabel(option) : formatLabel(option)}
           </option>
         ))}
       </select>
@@ -311,11 +373,17 @@ function FormLabel({ children, htmlFor }: FormLabelProps) {
 
 type TaskTagProps = {
   label: string;
+  tone?: "ready" | "blocked";
 };
 
-function TaskTag({ label }: TaskTagProps) {
+function TaskTag({ label, tone = "ready" }: TaskTagProps) {
+  const toneClassName =
+    tone === "blocked"
+      ? "bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-200"
+      : "bg-slate-100 text-slate-700";
+
   return (
-    <span className="rounded-full bg-slate-100 px-2.5 py-1 font-medium text-slate-700">
+    <span className={`rounded-full px-2.5 py-1 font-medium ${toneClassName}`}>
       {label}
     </span>
   );

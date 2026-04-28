@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { CurrentContext, formatLabel, Task } from "@/lib/whatnext-data";
+import {
+  CurrentContext,
+  formatLabel,
+  formatTaskContextLabel,
+  Task,
+} from "@/lib/whatnext-data";
 import {
   buildExplanationInput,
   generateLocalExplanations,
@@ -77,9 +82,11 @@ export function RecommendationSection({
     <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
       <div className="flex h-full flex-col gap-5">
         <div className="space-y-1.5">
-          <h2 className="text-lg font-semibold text-slate-900">Recommendation</h2>
+          <h2 className="text-xl font-semibold text-slate-950">
+            Step 3: Your recommended next action
+          </h2>
           <p className="text-sm text-slate-500">
-            The best next task based on your current context.
+            Based on your tasks and current situation, here is the next best step.
           </p>
         </div>
 
@@ -93,10 +100,12 @@ export function RecommendationSection({
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <h3 className="text-xl font-semibold text-slate-950 sm:text-2xl">
-                      {recommendation.primaryTask.task.name}
+                      {getRecommendationTitle(recommendation.primaryTask)}
                     </h3>
                     <p className="max-w-xl text-sm leading-6 text-slate-600">
-                      A strong fit for the time and context you have right now.
+                      {recommendation.primaryTask.flags.isProgressRecommendation
+                        ? "A good window to make meaningful progress, even if you may not finish it now."
+                        : "A strong fit for the time and context you have right now."}
                     </p>
                   </div>
 
@@ -114,12 +123,12 @@ export function RecommendationSection({
                       value={formatLabel(recommendation.primaryTask.task.importance)}
                     />
                     <RecommendationDetail
-                      label="Energy required"
-                      value={formatLabel(recommendation.primaryTask.task.energyRequired)}
+                      label="Focus required"
+                      value={formatLabel(recommendation.primaryTask.task.focusRequired)}
                     />
                     <RecommendationDetail
-                      label="Context tag"
-                      value={formatLabel(recommendation.primaryTask.task.contextTag)}
+                      label="Where can you do this?"
+                      value={formatTaskContextLabel(recommendation.primaryTask.task.contextTag)}
                     />
                   </div>
                 </div>
@@ -143,8 +152,13 @@ export function RecommendationSection({
                       Backup option
                     </p>
                     <h3 className="text-base font-semibold text-slate-900">
-                      {recommendation.backupTask.task.name}
+                      {getRecommendationTitle(recommendation.backupTask)}
                     </h3>
+                    <p className="text-sm leading-6 text-slate-600">
+                      {recommendation.backupTask.flags.isProgressRecommendation
+                        ? "A reasonable fallback if you want to make progress without expecting full completion."
+                        : "A solid alternative if the main recommendation does not feel right."}
+                    </p>
                   </div>
 
                   <div className="grid gap-3 sm:grid-cols-2">
@@ -161,12 +175,12 @@ export function RecommendationSection({
                       value={formatLabel(recommendation.backupTask.task.importance)}
                     />
                     <SecondaryRecommendationDetail
-                      label="Energy required"
-                      value={formatLabel(recommendation.backupTask.task.energyRequired)}
+                      label="Focus required"
+                      value={formatLabel(recommendation.backupTask.task.focusRequired)}
                     />
                     <SecondaryRecommendationDetail
-                      label="Context tag"
-                      value={formatLabel(recommendation.backupTask.task.contextTag)}
+                      label="Where can you do this?"
+                      value={formatTaskContextLabel(recommendation.backupTask.task.contextTag)}
                     />
                   </div>
 
@@ -189,6 +203,17 @@ export function RecommendationSection({
       </div>
     </section>
   );
+}
+
+function getRecommendationTitle(recommendation: {
+  task: Task;
+  flags: { isProgressRecommendation: boolean };
+}) {
+  if (recommendation.flags.isProgressRecommendation) {
+    return `Make progress on ${recommendation.task.name}`;
+  }
+
+  return recommendation.task.name;
 }
 
 type RecommendationDetailProps = {

@@ -1,6 +1,8 @@
 export type PriorityLevel = "low" | "medium" | "high";
 export type TaskContextTag = "flexible" | "desk" | "home" | "outside";
 export type LocationOption = "home" | "desk" | "outside";
+export type TaskReadiness = "ready" | "blocked";
+export type PartialProgressOption = "yes" | "no";
 
 export type Task = {
   id: number;
@@ -8,8 +10,10 @@ export type Task = {
   duration: number;
   urgency: PriorityLevel;
   importance: PriorityLevel;
-  energyRequired: PriorityLevel;
+  focusRequired: PriorityLevel;
   contextTag: TaskContextTag;
+  readiness: TaskReadiness;
+  canBeDoneInParts: PartialProgressOption;
 };
 
 export type TaskFormValues = {
@@ -17,13 +21,15 @@ export type TaskFormValues = {
   duration: string;
   urgency: PriorityLevel;
   importance: PriorityLevel;
-  energyRequired: PriorityLevel;
+  focusRequired: PriorityLevel;
   contextTag: TaskContextTag;
+  readiness: TaskReadiness;
+  canBeDoneInParts: PartialProgressOption;
 };
 
 export type CurrentContext = {
   timeAvailable: string;
-  currentEnergy: PriorityLevel;
+  currentFocus: PriorityLevel;
   interruptionRisk: PriorityLevel;
   location: LocationOption;
 };
@@ -35,8 +41,10 @@ export const sampleTasks: Task[] = [
     duration: 10,
     urgency: "high",
     importance: "high",
-    energyRequired: "low",
+    focusRequired: "low",
     contextTag: "home",
+    readiness: "ready",
+    canBeDoneInParts: "no",
   },
   {
     id: 2,
@@ -44,8 +52,10 @@ export const sampleTasks: Task[] = [
     duration: 15,
     urgency: "medium",
     importance: "high",
-    energyRequired: "medium",
+    focusRequired: "medium",
     contextTag: "desk",
+    readiness: "blocked",
+    canBeDoneInParts: "no",
   },
   {
     id: 3,
@@ -53,8 +63,10 @@ export const sampleTasks: Task[] = [
     duration: 20,
     urgency: "low",
     importance: "medium",
-    energyRequired: "medium",
+    focusRequired: "medium",
     contextTag: "outside",
+    readiness: "ready",
+    canBeDoneInParts: "yes",
   },
 ];
 
@@ -63,24 +75,56 @@ export const defaultTaskFormValues: TaskFormValues = {
   duration: "15",
   urgency: "medium",
   importance: "medium",
-  energyRequired: "medium",
+  focusRequired: "medium",
   contextTag: "flexible",
+  readiness: "ready",
+  canBeDoneInParts: "no",
 };
 
 export const defaultContext: CurrentContext = {
   timeAvailable: "20",
-  currentEnergy: "medium",
+  currentFocus: "medium",
   interruptionRisk: "medium",
   location: "home",
 };
 
 export const priorityOptions: PriorityLevel[] = ["low", "medium", "high"];
 export const taskContextOptions: TaskContextTag[] = ["flexible", "desk", "home", "outside"];
+export const readinessOptions: TaskReadiness[] = ["ready", "blocked"];
+export const partialProgressOptions: PartialProgressOption[] = ["yes", "no"];
 export const locationOptions: LocationOption[] = ["home", "desk", "outside"];
 export const timeOptions = ["10", "15", "20", "30", "45", "60", "90"];
 
 export function formatLabel(value: string) {
   return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+export function formatTaskContextLabel(value: TaskContextTag) {
+  if (value === "flexible") {
+    return "Anywhere";
+  }
+
+  if (value === "home") {
+    return "At home";
+  }
+
+  if (value === "desk") {
+    return "At desk";
+  }
+
+  return "Outside";
+}
+
+export function formatLocationLabel(value: LocationOption) {
+  if (value === "home") {
+    return "At home";
+  }
+
+  if (value === "desk") {
+    return "At desk";
+  }
+
+  return "Outside";
 }
 
 export function getPriorityValue(value: PriorityLevel) {

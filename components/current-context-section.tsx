@@ -4,6 +4,7 @@ import { ChangeEvent } from "react";
 import {
   CurrentContext,
   formatLabel,
+  formatLocationLabel,
   locationOptions,
   priorityOptions,
   timeOptions,
@@ -31,9 +32,11 @@ export function CurrentContextSection({
     <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
       <div className="flex h-full flex-col gap-5">
         <div className="space-y-1.5">
-          <h2 className="text-lg font-semibold text-slate-900">Current Context</h2>
+          <h2 className="text-xl font-semibold text-slate-950">
+            Step 2: Tell us your current situation
+          </h2>
           <p className="text-sm text-slate-500">
-            Set what your day looks like right now.
+            This helps WhatNext choose what is realistic right now.
           </p>
         </div>
 
@@ -49,30 +52,32 @@ export function CurrentContextSection({
           />
 
           <SelectField
-            id="currentEnergy"
-            label="Current energy"
-            name="currentEnergy"
+            id="currentFocus"
+            label="Current focus"
+            name="currentFocus"
             options={priorityOptions}
-            value={context.currentEnergy}
+            value={context.currentFocus}
             onChange={handleChange}
           />
 
           <SelectField
             id="interruptionRisk"
-            label="Interruption risk"
+            label="Chance you'll be interrupted"
             name="interruptionRisk"
             options={priorityOptions}
             value={context.interruptionRisk}
             onChange={handleChange}
+            helperText="High interruption favors shorter, lower-focus tasks."
           />
 
           <SelectField
             id="location"
-            label="Location"
+            label="Where are you now?"
             name="location"
             options={locationOptions}
             value={context.location}
             onChange={handleChange}
+            getOptionLabel={formatLocationLabel}
           />
         </div>
 
@@ -85,9 +90,11 @@ export function CurrentContextSection({
           </div>
           <div className="mt-4 flex flex-wrap gap-2 text-xs text-slate-600">
             <ContextTag label={`${context.timeAvailable} minutes available`} />
-            <ContextTag label={`Energy: ${context.currentEnergy}`} />
-            <ContextTag label={`Interruption risk: ${context.interruptionRisk}`} />
-            <ContextTag label={`Location: ${context.location}`} />
+            <ContextTag label={`Focus: ${context.currentFocus}`} />
+            <ContextTag
+              label={`Chance you'll be interrupted: ${context.interruptionRisk}`}
+            />
+            <ContextTag label={`Where you are now: ${formatLocationLabel(context.location)}`} />
           </div>
         </div>
       </div>
@@ -103,6 +110,8 @@ type SelectFieldProps<T extends string> = {
   value: T;
   onChange: (event: ChangeEvent<HTMLSelectElement>) => void;
   suffix?: string;
+  helperText?: string;
+  getOptionLabel?: (option: T) => string;
 };
 
 function SelectField<T extends string>({
@@ -113,6 +122,8 @@ function SelectField<T extends string>({
   value,
   onChange,
   suffix,
+  helperText,
+  getOptionLabel,
 }: SelectFieldProps<T>) {
   return (
     <div className="space-y-2">
@@ -128,10 +139,15 @@ function SelectField<T extends string>({
       >
         {options.map((option) => (
           <option key={option} value={option}>
-            {suffix ? `${option} ${suffix}` : formatLabel(option)}
+            {suffix
+              ? `${option} ${suffix}`
+              : getOptionLabel
+                ? getOptionLabel(option)
+                : formatLabel(option)}
           </option>
         ))}
       </select>
+      {helperText ? <p className="text-sm text-slate-500">{helperText}</p> : null}
     </div>
   );
 }
