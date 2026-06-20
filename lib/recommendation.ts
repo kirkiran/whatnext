@@ -29,6 +29,7 @@ export type RecommendationChoice = {
 export type RecommendationResult = {
   primaryTask: RecommendationChoice;
   backupTask: RecommendationChoice | null;
+  suggestedPlanTasks: RecommendationChoice[];
 };
 
 export function getRecommendationResult(
@@ -60,10 +61,14 @@ export function getRecommendationResult(
   const backupTask = rankedTasks[1]
     ? buildRecommendationChoice(rankedTasks[1], context)
     : null;
+  const suggestedPlanTasks = rankedTasks
+    .slice(1, 3)
+    .map((task) => buildRecommendationChoice(task, context));
 
   return {
     primaryTask,
     backupTask,
+    suggestedPlanTasks,
   };
 }
 

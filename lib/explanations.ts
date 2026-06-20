@@ -67,6 +67,43 @@ export function generateLocalExplanations(
   };
 }
 
+export function buildSuggestedPlanExplanation(
+  recommendation: ExplanationTaskInput,
+  context: ExplanationInput["context"],
+) {
+  const reasons: string[] = [];
+
+  if (recommendation.reasoningFlags.isProgressRecommendation) {
+    reasons.push(`lets you make progress in ${context.timeAvailable} minutes`);
+  } else if (recommendation.reasoningFlags.fitsAvailableTime) {
+    reasons.push(`still fits your ${context.timeAvailable}-minute window`);
+  }
+
+  if (recommendation.reasoningFlags.importanceLevel === "high") {
+    reasons.push("stays high on importance");
+  } else if (recommendation.reasoningFlags.urgencyLevel === "high") {
+    reasons.push("still deserves attention soon");
+  }
+
+  if (recommendation.reasoningFlags.practicalChoice) {
+    reasons.push(
+      `works for where you are now (${formatLocationLabel(context.location)})`,
+    );
+  }
+
+  if (recommendation.reasoningFlags.focusMatch === "exact") {
+    reasons.push("matches your current focus well");
+  } else if (recommendation.reasoningFlags.focusMatch === "close") {
+    reasons.push("should still feel realistic with your current focus");
+  }
+
+  if (reasons.length === 0) {
+    reasons.push("remains a practical follow-up option");
+  }
+
+  return `A good follow-up because it ${joinReasons(reasons)}.`;
+}
+
 function buildPrimaryExplanation(
   recommendation: ExplanationTaskInput,
   context: ExplanationInput["context"],
