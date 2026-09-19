@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { AppHeader } from "@/components/app-header";
 import { CurrentContextSection } from "@/components/current-context-section";
 import { RecommendationSection } from "@/components/recommendation-section";
 import { TasksSection } from "@/components/tasks-section";
@@ -54,23 +55,11 @@ export default function HomePage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-8 text-slate-900 sm:px-6 sm:py-10 lg:px-8 lg:py-14">
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-12">
-        <header className="space-y-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
-            WhatNext
-          </p>
-          <div className="space-y-3">
-            <h1 className="text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
-              WhatNext
-            </h1>
-            <p className="max-w-3xl text-base leading-7 text-slate-600 sm:text-lg">
-              Decide what to do next when your day gets messy
-            </p>
-          </div>
-        </header>
+    <main className="min-h-screen bg-canvas px-ds-4 py-ds-8 text-content-primary sm:px-ds-6 sm:py-ds-10 lg:px-ds-8 lg:py-ds-12">
+      <div className="mx-auto flex w-full max-w-5xl flex-col gap-ds-12">
+        <AppHeader />
 
-        <section className="flex flex-col gap-8">
+        <section className="flex flex-col gap-ds-8">
           <TasksSection
             tasks={tasks}
             setTasks={setTasks}

@@ -1,6 +1,10 @@
 "use client";
 
 import { ChangeEvent, FormEvent, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import {
   defaultTaskFormValues,
   formatLabel,
@@ -98,55 +102,53 @@ export function TasksSection({
   }
 
   return (
-    <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-      <div className="flex flex-col gap-5">
-        <div className="space-y-1.5">
-          <h2 className="text-xl font-semibold text-slate-950">
+    <section className="rounded-card border border-line bg-surface-primary p-ds-5 sm:p-ds-6">
+      <div className="flex flex-col gap-ds-6">
+        <div className="space-y-ds-2">
+          <h2 className="text-section-title text-content-primary">
             Step 1: Add or review your tasks
           </h2>
-          <p className="text-sm text-slate-500">
+          <p className="text-body-small text-content-secondary">
             Start by listing the tasks you want WhatNext to consider.
           </p>
         </div>
 
         <form
-          className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50/80 p-4 sm:p-5"
+          className="space-y-ds-6 border-t border-line-subtle pt-ds-6"
           onSubmit={handleSubmit}
         >
-          <div className="space-y-1">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+          <div className="space-y-ds-1">
+            <p className="text-component-title text-content-primary">
               {editingTaskId !== null ? "Edit task" : "Add a task"}
             </p>
-            <p className="text-sm text-slate-500">
+            <p className="text-body-small text-content-muted">
               Keep task details short and practical so they are easy to scan later.
             </p>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-ds-5">
             <FormField>
               <FormLabel htmlFor="name">Task name</FormLabel>
-              <input
+              <Input
                 id="name"
                 name="name"
                 type="text"
                 value={formValues.name}
                 onChange={handleInputChange}
                 placeholder="Enter a task"
-                className={fieldClassName}
               />
             </FormField>
 
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-ds-4 md:grid-cols-2">
               <FormField>
                 <FormLabel htmlFor="duration">Estimated duration</FormLabel>
-                <input
+                <Input
                   id="duration"
                   name="duration"
                   type="number"
                   min="1"
                   value={formValues.duration}
                   onChange={handleInputChange}
-                  className={fieldClassName}
                 />
               </FormField>
 
@@ -161,7 +163,7 @@ export function TasksSection({
               />
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-ds-4 md:grid-cols-2">
               <SelectField
                 id="urgency"
                 label="Urgency"
@@ -190,7 +192,7 @@ export function TasksSection({
               />
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-ds-4 md:grid-cols-2">
               <SelectField
                 id="readiness"
                 label="Can this be done now?"
@@ -211,93 +213,80 @@ export function TasksSection({
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-3">
-            <button
-              type="submit"
-              className="rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-700"
-            >
+          <div className="flex flex-wrap gap-ds-3">
+            <Button type="submit" variant="primary">
               {editingTaskId !== null ? "Save task" : "Add task"}
-            </button>
+            </Button>
 
             {editingTaskId !== null ? (
-              <button
-                type="button"
-                onClick={resetForm}
-                className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
-              >
+              <Button type="button" variant="tertiary" onClick={resetForm}>
                 Cancel edit
-              </button>
+              </Button>
             ) : null}
           </div>
         </form>
 
-        <div className="space-y-3 border-t border-slate-100 pt-5">
-          <div className="flex items-center justify-between gap-3">
-            <div className="space-y-1">
-              <h3 className="text-sm font-semibold text-slate-900">Task list</h3>
-              <p className="text-xs text-slate-500">
+        <div className="border-t border-line-subtle pt-ds-6">
+          <div className="flex flex-wrap items-end justify-between gap-ds-3 pb-ds-3">
+            <div className="space-y-ds-1">
+              <h3 className="text-component-title text-content-primary">
+                Task list
+              </h3>
+              <p className="text-body-small text-content-muted">
                 Blocked tasks stay visible, but they are skipped for recommendations.
               </p>
             </div>
-            <div className="flex items-center gap-3">
-              <p className="text-xs text-slate-500">
+            <div className="flex items-center gap-ds-3">
+              <p className="text-metadata text-content-muted">
                 {tasks.length} {tasks.length === 1 ? "task" : "tasks"}
               </p>
-              <button
-                type="button"
-                onClick={onResetSampleTasks}
-                className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50"
-              >
+              <Button variant="tertiary" onClick={onResetSampleTasks}>
                 Reset sample tasks
-              </button>
+              </Button>
             </div>
           </div>
 
           {tasks.map((task) => (
-            <article
-              key={task.id}
-              className="rounded-2xl border border-slate-200 bg-white p-3.5"
-            >
-              <div className="flex flex-col gap-3">
-                <div className="flex items-start justify-between gap-4">
-                  <h3 className="pr-2 text-sm font-semibold leading-6 text-slate-900">
-                    {task.name}
-                  </h3>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleEdit(task)}
-                      className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 transition hover:bg-slate-50"
+            <article key={task.id} className="border-t border-line-subtle py-ds-5">
+              <div className="flex flex-col gap-ds-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0 space-y-ds-3">
+                  <div className="flex flex-wrap items-center gap-ds-2">
+                    <h3 className="text-component-title text-content-primary">
+                      {task.name}
+                    </h3>
+                    <Badge
+                      variant={task.readiness === "ready" ? "success" : "danger"}
                     >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(task.id)}
-                      className="rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-600 transition hover:bg-rose-50"
-                    >
-                      Delete
-                    </button>
+                      {task.readiness === "ready" ? "Ready" : "Blocked"}
+                    </Badge>
                   </div>
+
+                  <p className="text-metadata text-content-secondary">
+                    {`${task.duration} min · ${formatTaskContextLabel(task.contextTag)} · ${formatLabel(task.focusRequired)} focus · ${formatLabel(task.importance)} importance · ${formatLabel(task.urgency)} urgency`}
+                  </p>
+
+                  <p className="text-body-small text-content-muted">
+                    {task.canBeDoneInParts === "yes"
+                      ? "Can be done in parts"
+                      : "Needs a full session"}
+                  </p>
                 </div>
 
-                <div className="flex flex-wrap gap-2 text-xs text-slate-600">
-                  <TaskTag label={`${task.duration} min`} />
-                  <TaskTag label={`Urgency: ${task.urgency}`} />
-                  <TaskTag label={`Importance: ${task.importance}`} />
-                  <TaskTag label={`Focus: ${task.focusRequired}`} />
-                  <TaskTag label={formatTaskContextLabel(task.contextTag)} />
-                  <TaskTag
-                    label={
-                      task.canBeDoneInParts === "yes"
-                        ? "Can be done in parts"
-                        : "Needs full session"
-                    }
-                  />
-                  <TaskTag
-                    label={task.readiness === "ready" ? "Ready" : "Blocked"}
-                    tone={task.readiness}
-                  />
+                <div className="flex shrink-0 gap-ds-2">
+                  <Button
+                    type="button"
+                    variant="tertiary"
+                    onClick={() => handleEdit(task)}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    onClick={() => handleDelete(task.id)}
+                  >
+                    Delete
+                  </Button>
                 </div>
               </div>
             </article>
@@ -330,19 +319,13 @@ function SelectField<T extends string>({
   return (
     <FormField>
       <FormLabel htmlFor={id}>{label}</FormLabel>
-      <select
-        id={id}
-        name={name}
-        value={value}
-        onChange={onChange}
-        className={fieldClassName}
-      >
+      <Select id={id} name={name} value={value} onChange={onChange}>
         {options.map((option) => (
           <option key={option} value={option}>
             {getOptionLabel ? getOptionLabel(option) : formatLabel(option)}
           </option>
         ))}
-      </select>
+      </Select>
     </FormField>
   );
 }
@@ -352,7 +335,7 @@ type FormFieldProps = {
 };
 
 function FormField({ children }: FormFieldProps) {
-  return <div className="space-y-2.5">{children}</div>;
+  return <div className="space-y-ds-2">{children}</div>;
 }
 
 type FormLabelProps = {
@@ -362,32 +345,8 @@ type FormLabelProps = {
 
 function FormLabel({ children, htmlFor }: FormLabelProps) {
   return (
-    <label
-      className="block text-xs font-semibold uppercase tracking-[0.12em] text-slate-500"
-      htmlFor={htmlFor}
-    >
+    <label className="block text-label text-content-secondary" htmlFor={htmlFor}>
       {children}
     </label>
   );
 }
-
-type TaskTagProps = {
-  label: string;
-  tone?: "ready" | "blocked";
-};
-
-function TaskTag({ label, tone = "ready" }: TaskTagProps) {
-  const toneClassName =
-    tone === "blocked"
-      ? "bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-200"
-      : "bg-slate-100 text-slate-700";
-
-  return (
-    <span className={`rounded-full px-2.5 py-1 font-medium ${toneClassName}`}>
-      {label}
-    </span>
-  );
-}
-
-const fieldClassName =
-  "h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-slate-400";
