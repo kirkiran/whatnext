@@ -1,6 +1,7 @@
 "use client";
 
 import { ChangeEvent } from "react";
+import { Select } from "@/components/ui/select";
 import {
   CurrentContext,
   formatLabel,
@@ -29,18 +30,18 @@ export function CurrentContextSection({
   }
 
   return (
-    <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-      <div className="flex h-full flex-col gap-5">
-        <div className="space-y-1.5">
-          <h2 className="text-xl font-semibold text-slate-950">
+    <section className="rounded-card border border-line bg-surface-primary p-ds-5 sm:p-ds-6">
+      <div className="flex flex-col gap-ds-6">
+        <div className="space-y-ds-2">
+          <h2 className="text-section-title text-content-primary">
             Step 2: Tell us your current situation
           </h2>
-          <p className="text-sm text-slate-500">
+          <p className="text-body-small text-content-secondary">
             This helps WhatNext choose what is realistic right now.
           </p>
         </div>
 
-        <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50/80 p-4 sm:p-5">
+        <div className="grid gap-ds-5 border-t border-line-subtle pt-ds-6 md:grid-cols-2">
           <SelectField
             id="timeAvailable"
             label="Time available now"
@@ -81,21 +82,34 @@ export function CurrentContextSection({
           />
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-4">
-          <div className="space-y-1">
-            <h3 className="text-sm font-semibold text-slate-900">Selected context</h3>
-            <p className="text-sm text-slate-500">
+        <div className="border-t border-line-subtle pt-ds-6">
+          <div className="space-y-ds-1">
+            <h3 className="text-component-title text-content-primary">
+              Selected context
+            </h3>
+            <p className="text-body-small text-content-muted">
               This is the context used for the current recommendation.
             </p>
           </div>
-          <div className="mt-4 flex flex-wrap gap-2 text-xs text-slate-600">
-            <ContextTag label={`${context.timeAvailable} minutes available`} />
-            <ContextTag label={`Focus: ${context.currentFocus}`} />
-            <ContextTag
-              label={`Chance you'll be interrupted: ${context.interruptionRisk}`}
+
+          <dl className="mt-ds-4 grid gap-ds-3 sm:grid-cols-2">
+            <ContextDetail
+              label="Time available"
+              value={`${context.timeAvailable} minutes`}
             />
-            <ContextTag label={`Where you are now: ${formatLocationLabel(context.location)}`} />
-          </div>
+            <ContextDetail
+              label="Current focus"
+              value={formatLabel(context.currentFocus)}
+            />
+            <ContextDetail
+              label="Chance you'll be interrupted"
+              value={formatLabel(context.interruptionRisk)}
+            />
+            <ContextDetail
+              label="Current location"
+              value={formatLocationLabel(context.location)}
+            />
+          </dl>
         </div>
       </div>
     </section>
@@ -125,17 +139,19 @@ function SelectField<T extends string>({
   helperText,
   getOptionLabel,
 }: SelectFieldProps<T>) {
+  const helperTextId = helperText ? `${id}-helper` : undefined;
+
   return (
-    <div className="space-y-2">
-      <label className="block text-xs font-semibold uppercase tracking-[0.12em] text-slate-500" htmlFor={id}>
+    <div className="space-y-ds-2">
+      <label className="block text-label text-content-secondary" htmlFor={id}>
         {label}
       </label>
-      <select
+      <Select
         id={id}
         name={name}
         value={value}
         onChange={onChange}
-        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-slate-400"
+        aria-describedby={helperTextId}
       >
         {options.map((option) => (
           <option key={option} value={option}>
@@ -146,20 +162,26 @@ function SelectField<T extends string>({
                 : formatLabel(option)}
           </option>
         ))}
-      </select>
-      {helperText ? <p className="text-sm text-slate-500">{helperText}</p> : null}
+      </Select>
+      {helperText ? (
+        <p id={helperTextId} className="text-body-small text-content-muted">
+          {helperText}
+        </p>
+      ) : null}
     </div>
   );
 }
 
-type ContextTagProps = {
+type ContextDetailProps = {
   label: string;
+  value: string;
 };
 
-function ContextTag({ label }: ContextTagProps) {
+function ContextDetail({ label, value }: ContextDetailProps) {
   return (
-    <span className="rounded-full bg-slate-100 px-2.5 py-1 font-medium text-slate-700">
-      {label}
-    </span>
+    <div className="space-y-ds-1">
+      <dt className="text-metadata text-content-muted">{label}</dt>
+      <dd className="text-body-small text-content-secondary">{value}</dd>
+    </div>
   );
 }
