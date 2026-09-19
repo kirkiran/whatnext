@@ -131,11 +131,14 @@ Use slightly warm neutrals rather than cold blue-gray or slate foundations.
 | `surface-elevated` | `#FFFFFF` |
 | `text-primary` | `#17211D` |
 | `text-secondary` | `#56615C` |
-| `text-muted` | `#7B8580` |
+| `text-muted` | `#6A746F` |
 | `text-disabled` | `#A4ACA8` |
 | `border-subtle` | `#E8ECE9` |
 | `border-default` | `#D8DEDA` |
 | `border-strong` | `#BBC5BF` |
+| `border-control` | `#7B8580` |
+
+`text-muted` is an accessibility-driven minor tuning of the original v1 value. It maintains at least WCAG AA 4.5:1 normal-text contrast on both Surface primary and Canvas. `border-control` provides meaningful control-boundary contrast on those same surfaces.
 
 Minor tuning is permitted only when required to satisfy accessibility or contrast requirements and must preserve the intended warm-neutral visual direction.
 
@@ -143,7 +146,7 @@ Minor tuning is permitted only when required to satisfy accessibility or contras
 
 **Status: Locked v1.**
 
-The semantic families and treatment are locked; exact values will be defined during implementation and verified for WCAG AA.
+The semantic families, treatment, and values are locked and have been verified for WCAG AA text contrast.
 
 Brand color and status color are conceptually separate. Define each semantic family with `surface`, `border`, `text`, and `icon` tokens:
 
@@ -153,6 +156,13 @@ Brand color and status color are conceptually separate. Define each semantic fam
 - Info
 
 Use a pale surface, restrained border, and darker text/icon. Warning remains amber, Danger remains muted red, and Info remains restrained blue. Avoid large saturated semantic-color blocks unless the meaning genuinely requires that prominence.
+
+| Family | Surface | Border | Text | Icon |
+| --- | --- | --- | --- | --- |
+| Success | `#EDF7F0` | `#B9DCC5` | `#245C3B` | `#245C3B` |
+| Warning | `#FFF8E8` | `#E8D19B` | `#75530A` | `#75530A` |
+| Danger | `#FFF1F1` | `#E7B8B8` | `#8A3030` | `#8A3030` |
+| Info | `#EFF6FC` | `#BCD3E5` | `#285A78` | `#285A78` |
 
 ### 3.2 Semantic token philosophy
 
@@ -189,6 +199,13 @@ The primary-action mappings are:
 | `action-primary` | `evergreen-600` |
 | `action-primary-hover` | `evergreen-700` |
 | `action-primary-pressed` | `evergreen-800` |
+
+Additional semantic mappings established for v1 are:
+
+| Semantic token | Foundation token |
+| --- | --- |
+| `action-secondary-pressed` | `evergreen-100` |
+| `text-brand` | `evergreen-800` |
 
 Palette and foundation tokens may underpin semantic tokens, but product/domain components must use the semantic or component layer. Avoid scattering values or direct utilities such as `#286044`, `bg-green-700`, `text-slate-500`, arbitrary radii, or arbitrary shadows throughout components.
 
@@ -290,6 +307,20 @@ Interactive icon buttons require accessible names.
 | Deliberate | 200–250ms |
 
 Avoid bounce, gratuitous card animation, animated gradients, or motion that slows task completion. Respect reduced-motion preferences.
+
+### 3.9 Interaction foundations
+
+**Status: Locked v1.**
+
+| Token | Value | Purpose |
+| --- | ---: | --- |
+| `control-height` | 44px | Default minimum height for buttons, inputs, and selects |
+| `icon-size-compact` | 16px | Compact icon and loading-indicator size |
+| `opacity-disabled` | 60% | Disabled treatment where opacity is appropriate |
+| `focus-ring-width` | 2px | Default focus-visible ring width |
+| `focus-ring-offset` | 2px | Default focus-visible separation from the component |
+
+The default focus color is Evergreen 600. Interactive primitives should consume this centralized focus treatment rather than define component-specific widths or offsets without a demonstrated need.
 
 ## 4. Primitive components
 

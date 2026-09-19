@@ -1,0 +1,2 @@
+export const controlClassName =
+  "min-h-control w-full rounded-control border border-line-control bg-surface-primary px-ds-3 text-body text-content-primary transition-colors duration-fast hover:border-content-secondary focus-visible:border-action-primary focus-visible:outline-none focus-visible:ring-system focus-visible:ring-focus focus-visible:ring-offset-system disabled:cursor-not-allowed disabled:bg-surface-secondary disabled:text-content-disabled aria-[invalid=true]:border-status-danger-border aria-[invalid=true]:focus-visible:ring-status-danger-text";
