@@ -246,6 +246,17 @@ export function TasksSection({
             </div>
           </div>
 
+          {tasks.length === 0 ? (
+            <div className="space-y-ds-1 border-t border-line-subtle py-ds-6">
+              <p className="text-component-title text-content-primary">
+                No tasks yet
+              </p>
+              <p className="text-body-small text-content-secondary">
+                Add a task when you’re ready, or restore the sample tasks.
+              </p>
+            </div>
+          ) : null}
+
           {tasks.map((task) => (
             <article key={task.id} className="border-t border-line-subtle py-ds-5">
               <div className="flex flex-col gap-ds-4 sm:flex-row sm:items-start sm:justify-between">

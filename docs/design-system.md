@@ -485,7 +485,8 @@ Contains:
 
 - Typographic WhatNext identity
 - Supporting product statement where appropriate
-- Reset sample tasks
+
+Reset sample tasks belongs with the Step 1 task-management controls. Treat it as a low-emphasis task-management and demo utility, not as a global product action.
 
 Use a typographic WhatNext wordmark for v1. Do not invent a permanent logo, leaf mark, sidebar navigation, tabs, account menu, or mobile navigation.
 
