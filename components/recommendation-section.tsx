@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { Surface } from "@/components/ui/surface";
 import {
   CurrentContext,
   formatLabel,
@@ -80,87 +81,87 @@ export function RecommendationSection({
   }, [explanationInput, explanationKey]);
 
   return (
-    <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-      <div className="flex h-full flex-col gap-5">
-        <div className="space-y-1.5">
-          <h2 className="text-xl font-semibold text-slate-950">
+    <section className="rounded-card border border-line bg-surface-primary p-ds-5 sm:p-ds-6">
+      <div className="flex flex-col gap-ds-6">
+        <div className="space-y-ds-2">
+          <h2 className="text-section-title text-content-primary">
             Step 3: Your recommended next action
           </h2>
-          <p className="text-sm text-slate-500">
+          <p className="text-body-small text-content-secondary">
             Based on your tasks and current situation, here is the next best step.
           </p>
         </div>
 
         {recommendation ? (
-          <div className="space-y-4">
-            <div className="space-y-1">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-                Recommended next action
-              </p>
-              <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5 sm:p-6">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <h3 className="text-xl font-semibold text-slate-950 sm:text-2xl">
-                      {getRecommendationTitle(recommendation.primaryTask)}
-                    </h3>
-                    <p className="max-w-xl text-sm leading-6 text-slate-600">
-                      {recommendation.primaryTask.flags.isProgressRecommendation
-                        ? "A good window to make meaningful progress, even if you may not finish it now."
-                        : "A strong fit for the time and context you have right now."}
-                    </p>
-                  </div>
-
-                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                    <RecommendationDetail
-                      label="Estimated duration"
-                      value={`${recommendation.primaryTask.task.duration} minutes`}
-                    />
-                    <RecommendationDetail
-                      label="Urgency"
-                      value={formatLabel(recommendation.primaryTask.task.urgency)}
-                    />
-                    <RecommendationDetail
-                      label="Importance"
-                      value={formatLabel(recommendation.primaryTask.task.importance)}
-                    />
-                    <RecommendationDetail
-                      label="Focus required"
-                      value={formatLabel(recommendation.primaryTask.task.focusRequired)}
-                    />
-                    <RecommendationDetail
-                      label="Where can you do this?"
-                      value={formatTaskContextLabel(recommendation.primaryTask.task.contextTag)}
-                    />
-                  </div>
+          <div className="space-y-ds-6 border-t border-line-subtle pt-ds-6">
+            <Surface variant="recommendation" className="p-ds-5 sm:p-ds-6">
+              <div className="space-y-ds-5">
+                <div className="space-y-ds-2">
+                  <p className="text-eyebrow uppercase text-content-brand">
+                    Recommended next action
+                  </p>
+                  <h3 className="text-recommendation-title text-content-primary">
+                    {getRecommendationTitle(recommendation.primaryTask)}
+                  </h3>
+                  <p className="max-w-2xl text-body text-content-secondary">
+                    {recommendation.primaryTask.flags.isProgressRecommendation
+                      ? "A good window to make meaningful progress, even if you may not finish it now."
+                      : "A strong fit for the time and context you have right now."}
+                  </p>
                 </div>
-              </div>
-            </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                <dl className="grid gap-ds-4 sm:grid-cols-2 lg:grid-cols-5">
+                  <RecommendationDetail
+                    label="Estimated duration"
+                    value={`${recommendation.primaryTask.task.duration} minutes`}
+                  />
+                  <RecommendationDetail
+                    label="Urgency"
+                    value={formatLabel(recommendation.primaryTask.task.urgency)}
+                  />
+                  <RecommendationDetail
+                    label="Importance"
+                    value={formatLabel(recommendation.primaryTask.task.importance)}
+                  />
+                  <RecommendationDetail
+                    label="Focus required"
+                    value={formatLabel(recommendation.primaryTask.task.focusRequired)}
+                  />
+                  <RecommendationDetail
+                    label="Where can you do this?"
+                    value={formatTaskContextLabel(
+                      recommendation.primaryTask.task.contextTag,
+                    )}
+                  />
+                </dl>
+              </div>
+            </Surface>
+
+            <div className="space-y-ds-2 border-t border-line-subtle pt-ds-5">
+              <p className="text-eyebrow uppercase text-content-muted">
                 Why this task
               </p>
-              <p className="mt-3 text-sm leading-7 text-slate-700">
+              <p className="max-w-3xl text-body text-content-secondary">
                 {explanations?.primaryExplanation ?? ""}
               </p>
             </div>
 
             {recommendation.suggestedPlanTasks.length > 0 ? (
-              <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
-                <div className="space-y-4">
-                  <div className="space-y-1">
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+              <div className="border-t border-line-subtle pt-ds-6">
+                <div className="space-y-ds-4">
+                  <div className="space-y-ds-1">
+                    <p className="text-eyebrow uppercase text-content-muted">
                       Suggested plan
                     </p>
-                    <h3 className="text-base font-semibold text-slate-900">
+                    <h3 className="text-component-title text-content-primary">
                       What to consider after the main recommendation
                     </h3>
-                    <p className="text-sm leading-6 text-slate-600">
+                    <p className="text-body-small text-content-muted">
                       These next options come from the same rule-based ranking, in order.
                     </p>
                   </div>
 
-                  <div className="space-y-3">
+                  <div>
                     {recommendation.suggestedPlanTasks.map((taskChoice, index) => (
                       <SuggestedPlanItem
                         key={taskChoice.task.id}
@@ -175,11 +176,15 @@ export function RecommendationSection({
             ) : null}
           </div>
         ) : (
-          <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-6">
-            <p className="text-base font-semibold text-slate-900">No recommendation available</p>
-            <p className="mt-2 max-w-md text-sm leading-6 text-slate-600">
-              No suitable task found for current context
-            </p>
+          <div className="border-t border-line-subtle pt-ds-6">
+            <Surface variant="subtle" className="border-dashed p-ds-6">
+              <p className="text-component-title text-content-primary">
+                No recommendation available
+              </p>
+              <p className="mt-ds-2 max-w-md text-body-small text-content-secondary">
+                No suitable task found for current context
+              </p>
+            </Surface>
           </div>
         )}
       </div>
@@ -205,22 +210,9 @@ type RecommendationDetailProps = {
 
 function RecommendationDetail({ label, value }: RecommendationDetailProps) {
   return (
-    <div className="rounded-2xl bg-white p-3.5">
-      <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">
-        {label}
-      </p>
-      <p className="mt-1 text-sm font-semibold text-slate-900">{value}</p>
-    </div>
-  );
-}
-
-function SecondaryRecommendationDetail({ label, value }: RecommendationDetailProps) {
-  return (
-    <div className="rounded-2xl bg-slate-50 p-3.5">
-      <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">
-        {label}
-      </p>
-      <p className="mt-1 text-sm font-semibold text-slate-900">{value}</p>
+    <div className="space-y-ds-1">
+      <dt className="text-metadata text-content-muted">{label}</dt>
+      <dd className="text-body-small text-content-secondary">{value}</dd>
     </div>
   );
 }
@@ -254,37 +246,37 @@ function SuggestedPlanItem({
   context,
 }: SuggestedPlanItemProps) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
-      <div className="space-y-3">
-        <div className="space-y-1">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+    <article className="border-t border-line-subtle py-ds-5">
+      <div className="space-y-ds-3">
+        <div className="space-y-ds-1">
+          <p className="text-eyebrow uppercase text-content-brand">
             Option {index + 1}
           </p>
-          <h4 className="text-base font-semibold text-slate-900">
+          <h4 className="text-component-title text-content-primary">
             {getRecommendationTitle(recommendation)}
           </h4>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <SecondaryRecommendationDetail
+        <dl className="grid gap-ds-3 sm:grid-cols-2 lg:grid-cols-4">
+          <RecommendationDetail
             label="Duration"
             value={`${recommendation.task.duration} minutes`}
           />
-          <SecondaryRecommendationDetail
+          <RecommendationDetail
             label="Importance"
             value={formatLabel(recommendation.task.importance)}
           />
-          <SecondaryRecommendationDetail
+          <RecommendationDetail
             label="Where can you do this?"
             value={formatTaskContextLabel(recommendation.task.contextTag)}
           />
-          <SecondaryRecommendationDetail
+          <RecommendationDetail
             label="Focus required"
             value={formatLabel(recommendation.task.focusRequired)}
           />
-        </div>
+        </dl>
 
-        <p className="text-sm leading-6 text-slate-600">
+        <p className="max-w-3xl text-body-small text-content-secondary">
           {buildSuggestedPlanExplanation(
             {
               task: recommendation.task,
@@ -299,6 +291,6 @@ function SuggestedPlanItem({
           )}
         </p>
       </div>
-    </div>
+    </article>
   );
 }
