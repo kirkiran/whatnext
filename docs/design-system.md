@@ -318,6 +318,7 @@ Avoid bounce, gratuitous card animation, animated gradients, or motion that slow
 | --- | ---: | --- |
 | `control-height` | 44px | Default minimum height for buttons, inputs, and selects |
 | `icon-size-compact` | 16px | Compact icon and loading-indicator size |
+| `icon-size-standard` | 20px | Standard contextual icon size |
 | `opacity-disabled` | 60% | Disabled treatment where opacity is appropriate |
 | `focus-ring-width` | 2px | Default focus-visible ring width |
 | `focus-ring-offset` | 2px | Default focus-visible separation from the component |
@@ -430,6 +431,8 @@ Metadata is distinct from badges. Duration, location, focus, and importance shou
 
 Metadata should be visually subordinate to the task title. Use badges only when the value represents a meaningful semantic status or needs specific emphasis.
 
+Use compact inline icon-and-text metadata when an icon improves scanning. Icons inherit semantic color through `currentColor`, remain subordinate to their text, and are decorative when the adjacent text communicates the complete meaning.
+
 ### 4.5 Surfaces and cards
 
 **Status: Defined.**
@@ -523,6 +526,8 @@ Used for:
 
 The design system may later support touch-oriented choice controls, but v1 must not invent new behavior or alter the meaning of the existing controls.
 
+Context controls may use standard-size outline icons inside the control boundary when they clarify the dimension. Keep labels visible and preserve the default control target size. Present the selected context as a quiet, compact confirmation rather than a second form, while retaining every context value.
+
 ### 5.4 Recommendation
 
 **Status: Defined.**
@@ -537,6 +542,8 @@ Suggested treatment:
 - Subtle Evergreen border
 - Optional Level 1 elevation
 - Restrained rather than loud presentation
+
+The recommendation treatment may be applied to the component's outer section shell so the primary result, explanation, and Suggested Plan read as one hierarchy without nesting an additional recommendation card.
 
 Hierarchy:
 

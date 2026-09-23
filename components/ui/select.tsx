@@ -14,7 +14,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
   return (
     <select
       ref={ref}
-      className={`${controlClassName} ${className}`}
+      className={`${controlClassName} pr-ds-10 ${className}`}
       {...props}
     >
       {children}

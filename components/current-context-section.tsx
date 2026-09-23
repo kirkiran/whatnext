@@ -1,6 +1,9 @@
 "use client";
 
 import { ChangeEvent } from "react";
+import { AudioWaveform, BellRing, Clock, MapPin } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { MetadataItem } from "@/components/ui/metadata-item";
 import { Select } from "@/components/ui/select";
 import {
   CurrentContext,
@@ -30,8 +33,8 @@ export function CurrentContextSection({
   }
 
   return (
-    <section className="rounded-card border border-line bg-surface-primary p-ds-5 sm:p-ds-6">
-      <div className="flex flex-col gap-ds-6">
+    <section className="rounded-card border border-line bg-surface-primary p-ds-5 shadow-1 sm:p-ds-6">
+      <div className="flex flex-col gap-ds-5">
         <div className="space-y-ds-2">
           <h2 className="text-section-title text-content-primary">
             Current Context
@@ -41,7 +44,7 @@ export function CurrentContextSection({
           </p>
         </div>
 
-        <div className="grid gap-ds-5 border-t border-line-subtle pt-ds-6 md:grid-cols-2">
+        <div className="grid gap-ds-4 border-t border-line-subtle pt-ds-5 md:grid-cols-2 xl:grid-cols-4">
           <SelectField
             id="timeAvailable"
             label="Time available now"
@@ -50,6 +53,7 @@ export function CurrentContextSection({
             value={context.timeAvailable}
             onChange={handleChange}
             suffix="minutes"
+            icon={Clock}
           />
 
           <SelectField
@@ -59,6 +63,7 @@ export function CurrentContextSection({
             options={priorityOptions}
             value={context.currentFocus}
             onChange={handleChange}
+            icon={AudioWaveform}
           />
 
           <SelectField
@@ -69,6 +74,7 @@ export function CurrentContextSection({
             value={context.interruptionRisk}
             onChange={handleChange}
             helperText="High interruption favors shorter, lower-focus tasks."
+            icon={BellRing}
           />
 
           <SelectField
@@ -79,35 +85,32 @@ export function CurrentContextSection({
             value={context.location}
             onChange={handleChange}
             getOptionLabel={formatLocationLabel}
+            icon={MapPin}
           />
         </div>
 
-        <div className="border-t border-line-subtle pt-ds-6">
-          <div className="space-y-ds-1">
-            <h3 className="text-component-title text-content-primary">
-              Selected context
-            </h3>
-            <p className="text-body-small text-content-muted">
-              This is the context used for the current recommendation.
-            </p>
-          </div>
-
-          <dl className="mt-ds-4 grid gap-ds-3 sm:grid-cols-2">
+        <div className="flex flex-col gap-ds-3 rounded-control bg-surface-secondary px-ds-4 py-ds-3 sm:flex-row sm:items-center">
+          <p className="shrink-0 text-label text-content-muted">Using now</p>
+          <dl className="flex flex-wrap gap-x-ds-5 gap-y-ds-2">
             <ContextDetail
               label="Time available"
               value={`${context.timeAvailable} minutes`}
+              icon={Clock}
             />
             <ContextDetail
               label="Current focus"
-              value={formatLabel(context.currentFocus)}
+              value={`${formatLabel(context.currentFocus)} focus`}
+              icon={AudioWaveform}
             />
             <ContextDetail
               label="Chance you'll be interrupted"
-              value={formatLabel(context.interruptionRisk)}
+              value={`${formatLabel(context.interruptionRisk)} interruption risk`}
+              icon={BellRing}
             />
             <ContextDetail
               label="Current location"
               value={formatLocationLabel(context.location)}
+              icon={MapPin}
             />
           </dl>
         </div>
@@ -126,6 +129,7 @@ type SelectFieldProps<T extends string> = {
   suffix?: string;
   helperText?: string;
   getOptionLabel?: (option: T) => string;
+  icon: LucideIcon;
 };
 
 function SelectField<T extends string>({
@@ -138,6 +142,7 @@ function SelectField<T extends string>({
   suffix,
   helperText,
   getOptionLabel,
+  icon: Icon,
 }: SelectFieldProps<T>) {
   const helperTextId = helperText ? `${id}-helper` : undefined;
 
@@ -146,23 +151,31 @@ function SelectField<T extends string>({
       <label className="block text-label text-content-secondary" htmlFor={id}>
         {label}
       </label>
-      <Select
-        id={id}
-        name={name}
-        value={value}
-        onChange={onChange}
-        aria-describedby={helperTextId}
-      >
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {suffix
-              ? `${option} ${suffix}`
-              : getOptionLabel
-                ? getOptionLabel(option)
-                : formatLabel(option)}
-          </option>
-        ))}
-      </Select>
+      <div className="relative">
+        <Icon
+          aria-hidden="true"
+          className="pointer-events-none absolute left-ds-3 top-1/2 size-icon-standard -translate-y-1/2 text-content-muted"
+          strokeWidth={1.75}
+        />
+        <Select
+          id={id}
+          name={name}
+          value={value}
+          onChange={onChange}
+          aria-describedby={helperTextId}
+          className="pl-ds-10"
+        >
+          {options.map((option) => (
+            <option key={option} value={option}>
+              {suffix
+                ? `${option} ${suffix}`
+                : getOptionLabel
+                  ? getOptionLabel(option)
+                  : formatLabel(option)}
+            </option>
+          ))}
+        </Select>
+      </div>
       {helperText ? (
         <p id={helperTextId} className="text-body-small text-content-muted">
           {helperText}
@@ -175,13 +188,16 @@ function SelectField<T extends string>({
 type ContextDetailProps = {
   label: string;
   value: string;
+  icon: LucideIcon;
 };
 
-function ContextDetail({ label, value }: ContextDetailProps) {
+function ContextDetail({ label, value, icon }: ContextDetailProps) {
   return (
-    <div className="space-y-ds-1">
-      <dt className="text-metadata text-content-muted">{label}</dt>
-      <dd className="text-body-small text-content-secondary">{value}</dd>
+    <div>
+      <dt className="sr-only">{label}</dt>
+      <dd>
+        <MetadataItem icon={icon}>{value}</MetadataItem>
+      </dd>
     </div>
   );
 }

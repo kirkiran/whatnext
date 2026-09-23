@@ -89,6 +89,7 @@ const config: Config = {
         "ds-12": "var(--space-12)",
         "ds-16": "var(--space-16)",
         "icon-compact": "var(--icon-size-compact)",
+        "icon-standard": "var(--icon-size-standard)",
       },
       minHeight: {
         control: "var(--control-height)",

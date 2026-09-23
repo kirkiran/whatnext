@@ -1,6 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { AudioWaveform, Clock, MapPin } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { MetadataItem } from "@/components/ui/metadata-item";
 import { Surface } from "@/components/ui/surface";
 import {
   CurrentContext,
@@ -81,10 +85,16 @@ export function RecommendationSection({
   }, [explanationInput, explanationKey]);
 
   return (
-    <section className="rounded-card border border-line bg-surface-primary p-ds-5 sm:p-ds-6">
-      <div className="flex flex-col gap-ds-6">
+    <section
+      className={`rounded-card border p-ds-5 sm:p-ds-6 ${
+        recommendation
+          ? "border-line-brand bg-surface-recommendation shadow-1"
+          : "border-line bg-surface-primary"
+      }`}
+    >
+      <div className="flex flex-col gap-ds-5">
         <div className="space-y-ds-2">
-          <h2 className="text-section-title text-content-primary">
+          <h2 className="text-section-title text-content-brand">
             Recommended Next Action
           </h2>
           <p className="text-body-small text-content-secondary">
@@ -93,51 +103,47 @@ export function RecommendationSection({
         </div>
 
         {recommendation ? (
-          <div className="space-y-ds-6 border-t border-line-subtle pt-ds-6">
-            <Surface variant="recommendation" className="p-ds-5 sm:p-ds-6">
-              <div className="space-y-ds-5">
-                <div className="space-y-ds-2">
-                  <p className="text-eyebrow uppercase text-content-brand">
-                    Recommended next action
-                  </p>
-                  <h3 className="text-recommendation-title text-content-primary">
-                    {getRecommendationTitle(recommendation.primaryTask)}
-                  </h3>
-                  <p className="max-w-2xl text-body text-content-secondary">
-                    {recommendation.primaryTask.flags.isProgressRecommendation
-                      ? "A good window to make meaningful progress, even if you may not finish it now."
-                      : "A strong fit for the time and context you have right now."}
-                  </p>
-                </div>
-
-                <dl className="grid gap-ds-4 sm:grid-cols-2 lg:grid-cols-5">
-                  <RecommendationDetail
-                    label="Estimated duration"
-                    value={`${recommendation.primaryTask.task.duration} minutes`}
-                  />
-                  <RecommendationDetail
-                    label="Urgency"
-                    value={formatLabel(recommendation.primaryTask.task.urgency)}
-                  />
-                  <RecommendationDetail
-                    label="Importance"
-                    value={formatLabel(recommendation.primaryTask.task.importance)}
-                  />
-                  <RecommendationDetail
-                    label="Focus required"
-                    value={formatLabel(recommendation.primaryTask.task.focusRequired)}
-                  />
-                  <RecommendationDetail
-                    label="Where can you do this?"
-                    value={formatTaskContextLabel(
-                      recommendation.primaryTask.task.contextTag,
-                    )}
-                  />
-                </dl>
+          <div className="space-y-ds-5 border-t border-line-brand pt-ds-5">
+            <div className="space-y-ds-4 px-ds-1">
+              <div className="space-y-ds-2">
+                <Badge variant="brand" className="text-eyebrow uppercase">
+                  Recommended
+                </Badge>
+                <h3 className="text-recommendation-title text-content-primary">
+                  {getRecommendationTitle(recommendation.primaryTask)}
+                </h3>
+                <p className="max-w-2xl text-body text-content-secondary">
+                  {recommendation.primaryTask.flags.isProgressRecommendation
+                    ? "A good window to make meaningful progress, even if you may not finish it now."
+                    : "A strong fit for the time and context you have right now."}
+                </p>
               </div>
-            </Surface>
 
-            <div className="space-y-ds-2 border-t border-line-subtle pt-ds-5">
+              <ul className="flex flex-wrap gap-x-ds-5 gap-y-ds-2">
+                <RecommendationMetadata
+                  icon={Clock}
+                  value={`${recommendation.primaryTask.task.duration} minutes`}
+                />
+                <RecommendationMetadata
+                  icon={MapPin}
+                  value={formatTaskContextLabel(
+                    recommendation.primaryTask.task.contextTag,
+                  )}
+                />
+                <RecommendationMetadata
+                  icon={AudioWaveform}
+                  value={`${formatLabel(recommendation.primaryTask.task.focusRequired)} focus`}
+                />
+                <RecommendationMetadata
+                  value={`${formatLabel(recommendation.primaryTask.task.urgency)} urgency`}
+                />
+                <RecommendationMetadata
+                  value={`${formatLabel(recommendation.primaryTask.task.importance)} importance`}
+                />
+              </ul>
+            </div>
+
+            <div className="space-y-ds-2 border-l-2 border-line-brand pl-ds-4">
               <p className="text-eyebrow uppercase text-content-muted">
                 Why this task
               </p>
@@ -147,7 +153,7 @@ export function RecommendationSection({
             </div>
 
             {recommendation.suggestedPlanTasks.length > 0 ? (
-              <div className="border-t border-line-subtle pt-ds-6">
+              <Surface variant="default" className="p-ds-4 sm:p-ds-5">
                 <div className="space-y-ds-4">
                   <div className="space-y-ds-1">
                     <p className="text-eyebrow uppercase text-content-muted">
@@ -172,19 +178,17 @@ export function RecommendationSection({
                     ))}
                   </div>
                 </div>
-              </div>
+              </Surface>
             ) : null}
           </div>
         ) : (
-          <div className="border-t border-line-subtle pt-ds-6">
-            <Surface variant="subtle" className="border-dashed p-ds-6">
-              <p className="text-component-title text-content-primary">
-                No recommendation available
-              </p>
-              <p className="mt-ds-2 max-w-md text-body-small text-content-secondary">
-                No suitable task found for current context
-              </p>
-            </Surface>
+          <div className="border-t border-line-subtle pt-ds-5">
+            <p className="text-component-title text-content-primary">
+              No recommendation available
+            </p>
+            <p className="mt-ds-2 max-w-md text-body-small text-content-secondary">
+              No suitable task found for current context
+            </p>
           </div>
         )}
       </div>
@@ -203,17 +207,19 @@ function getRecommendationTitle(recommendation: {
   return recommendation.task.name;
 }
 
-type RecommendationDetailProps = {
-  label: string;
+type RecommendationMetadataProps = {
+  icon?: LucideIcon;
   value: string;
 };
 
-function RecommendationDetail({ label, value }: RecommendationDetailProps) {
+function RecommendationMetadata({
+  icon,
+  value,
+}: RecommendationMetadataProps) {
   return (
-    <div className="space-y-ds-1">
-      <dt className="text-metadata text-content-muted">{label}</dt>
-      <dd className="text-body-small text-content-secondary">{value}</dd>
-    </div>
+    <li>
+      <MetadataItem icon={icon}>{value}</MetadataItem>
+    </li>
   );
 }
 
@@ -246,7 +252,7 @@ function SuggestedPlanItem({
   context,
 }: SuggestedPlanItemProps) {
   return (
-    <article className="border-t border-line-subtle py-ds-5">
+    <article className="border-t border-line-subtle py-ds-4 first:border-t-0 first:pt-0 last:pb-0">
       <div className="space-y-ds-3">
         <div className="space-y-ds-1">
           <p className="text-eyebrow uppercase text-content-brand">
@@ -257,24 +263,23 @@ function SuggestedPlanItem({
           </h4>
         </div>
 
-        <dl className="grid gap-ds-3 sm:grid-cols-2 lg:grid-cols-4">
-          <RecommendationDetail
-            label="Duration"
+        <ul className="flex flex-wrap gap-x-ds-4 gap-y-ds-2">
+          <RecommendationMetadata
+            icon={Clock}
             value={`${recommendation.task.duration} minutes`}
           />
-          <RecommendationDetail
-            label="Importance"
-            value={formatLabel(recommendation.task.importance)}
-          />
-          <RecommendationDetail
-            label="Where can you do this?"
+          <RecommendationMetadata
+            icon={MapPin}
             value={formatTaskContextLabel(recommendation.task.contextTag)}
           />
-          <RecommendationDetail
-            label="Focus required"
-            value={formatLabel(recommendation.task.focusRequired)}
+          <RecommendationMetadata
+            icon={AudioWaveform}
+            value={`${formatLabel(recommendation.task.focusRequired)} focus`}
           />
-        </dl>
+          <RecommendationMetadata
+            value={`${formatLabel(recommendation.task.importance)} importance`}
+          />
+        </ul>
 
         <p className="max-w-3xl text-body-small text-content-secondary">
           {buildSuggestedPlanExplanation(
