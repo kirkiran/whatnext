@@ -4,7 +4,6 @@ import {
   Clock,
   MapPin,
   Pencil,
-  RotateCcw,
   Trash2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -22,7 +21,6 @@ type TaskListProps = {
   tasks: Task[];
   onDelete: (taskId: number) => void;
   onEdit: (task: Task, event: MouseEvent<HTMLButtonElement>) => void;
-  onResetSampleTasks: () => void;
 };
 
 export function TaskList({
@@ -31,17 +29,9 @@ export function TaskList({
   tasks,
   onDelete,
   onEdit,
-  onResetSampleTasks,
 }: TaskListProps) {
   return (
     <div className="border-t border-line-subtle pt-ds-4">
-      <div className="flex justify-end pb-ds-3">
-        <Button variant="tertiary" onClick={onResetSampleTasks}>
-          <RotateCcw aria-hidden="true" className="size-icon-compact" />
-          Reset sample tasks
-        </Button>
-      </div>
-
       {tasks.length === 0 ? (
         <div className="space-y-ds-1 rounded-card border border-line-subtle bg-surface-secondary p-ds-5">
           <p className="text-component-title text-content-primary">No tasks yet</p>

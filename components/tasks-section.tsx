@@ -1,7 +1,7 @@
 "use client";
 
 import { ChangeEvent, FormEvent, MouseEvent, useEffect, useRef, useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, RotateCcw } from "lucide-react";
 import { TaskForm } from "@/components/task-form";
 import { TaskList } from "@/components/task-list";
 import { Button } from "@/components/ui/button";
@@ -145,16 +145,22 @@ export function TasksSection({
             </p>
           </div>
 
-          <Button
-            ref={addTaskButtonRef}
-            variant="primary"
-            aria-controls="task-form"
-            aria-expanded={isFormOpen}
-            onClick={handleOpenAddTask}
-          >
-            <Plus aria-hidden="true" className="size-icon-compact" />
-            Add task
-          </Button>
+          <div className="flex flex-wrap items-center gap-ds-2 sm:justify-end">
+            <Button variant="tertiary" onClick={onResetSampleTasks}>
+              <RotateCcw aria-hidden="true" className="size-icon-compact" />
+              Reset sample tasks
+            </Button>
+            <Button
+              ref={addTaskButtonRef}
+              variant="primary"
+              aria-controls="task-form"
+              aria-expanded={isFormOpen}
+              onClick={handleOpenAddTask}
+            >
+              <Plus aria-hidden="true" className="size-icon-compact" />
+              Add task
+            </Button>
+          </div>
         </div>
 
         {isFormOpen ? (
@@ -174,7 +180,6 @@ export function TasksSection({
           tasks={tasks}
           onDelete={handleDelete}
           onEdit={handleEdit}
-          onResetSampleTasks={onResetSampleTasks}
         />
       </div>
     </section>
