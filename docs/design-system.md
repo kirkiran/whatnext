@@ -401,6 +401,8 @@ Inputs and selects should generally be approximately 42–44px high. Required st
 
 Focus uses an Evergreen border and restrained Evergreen focus ring. Errors must communicate through text in addition to color. Current form semantics and behavior must not change merely to use a different control presentation.
 
+For task management, use one inline disclosure form controlled by the visible Add task and Edit actions. Keep it closed by default, retain every task field, and do not use a modal. The controlling action exposes `aria-expanded` and `aria-controls`; opening moves focus into the form, while Cancel and successful submission close it and return focus to an appropriate opener or stable task target.
+
 ### 4.3 Badges
 
 **Status: Defined.**
@@ -510,6 +512,8 @@ Hierarchy:
 5. Low-emphasis actions such as Edit and Delete
 
 Blocked tasks must remain readable and clearly blocked without appearing visually broken. Edit and Delete must remain discoverable without relying on hover. Visual-system work must not redesign task-management functionality.
+
+Present task items as compact, individually bounded objects. Keep title and semantic status prominent, use quiet inline icon-and-text metadata for duration, location, and focus where useful, and retain concise text for importance and urgency. Edit and Delete remain visible icon-and-text actions; Delete uses low-emphasis destructive treatment.
 
 ### 5.3 Context Field
 
@@ -621,6 +625,10 @@ Present reasoning in plain language and connect it to facts the user supplied, s
 ### 6.4 Recovery
 
 When there is no recommendation, explain the situation calmly and suggest an available adjustment when appropriate. Do not use alarm styling for a normal no-match state.
+
+### 6.5 Task-entry disclosure
+
+The task list is the default content of the Your Tasks workspace. Add task and Edit reveal the same contained inline form; only one task form exists at a time. Add starts from default values, Edit loads every stored value, and switching from Edit to Add resets the form to Add mode. Unsaved values may be discarded when the user cancels. Successful Add or Save closes the form without changing task ordering or CRUD semantics.
 
 ## 7. Accessibility
 
