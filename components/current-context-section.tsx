@@ -34,10 +34,10 @@ export function CurrentContextSection({
       <div className="flex flex-col gap-ds-6">
         <div className="space-y-ds-2">
           <h2 className="text-section-title text-content-primary">
-            Step 2: Tell us your current situation
+            Current Context
           </h2>
           <p className="text-body-small text-content-secondary">
-            This helps WhatNext choose what is realistic right now.
+            Tell WhatNext what your situation is right now.
           </p>
         </div>
 

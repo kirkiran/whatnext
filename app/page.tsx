@@ -55,18 +55,18 @@ export default function HomePage() {
   }
 
   return (
-    <main className="min-h-screen bg-canvas px-ds-4 py-ds-8 text-content-primary sm:px-ds-6 sm:py-ds-10 lg:px-ds-8 lg:py-ds-12">
-      <div className="mx-auto flex w-full max-w-5xl flex-col gap-ds-12">
+    <main className="min-h-screen bg-canvas px-ds-4 py-ds-6 text-content-primary sm:px-ds-6 sm:py-ds-8 lg:px-ds-8 lg:py-ds-10">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-ds-8">
         <AppHeader />
 
-        <section className="flex flex-col gap-ds-8">
+        <section className="flex flex-col gap-ds-6">
+          <CurrentContextSection context={context} setContext={setContext} />
+          <RecommendationSection tasks={tasks} context={context} />
           <TasksSection
             tasks={tasks}
             setTasks={setTasks}
             onResetSampleTasks={handleResetSampleTasks}
           />
-          <CurrentContextSection context={context} setContext={setContext} />
-          <RecommendationSection tasks={tasks} context={context} />
         </section>
       </div>
     </main>

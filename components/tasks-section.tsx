@@ -106,10 +106,10 @@ export function TasksSection({
       <div className="flex flex-col gap-ds-6">
         <div className="space-y-ds-2">
           <h2 className="text-section-title text-content-primary">
-            Step 1: Add or review your tasks
+            Your Tasks
           </h2>
           <p className="text-body-small text-content-secondary">
-            Start by listing the tasks you want WhatNext to consider.
+            Add or review the tasks you want WhatNext to consider.
           </p>
         </div>
 

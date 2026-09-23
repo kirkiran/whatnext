@@ -71,7 +71,7 @@ Visual design work must not silently become a product or UX redesign. Future imp
 
 Locked v1 behavior includes:
 
-- The Step 1 → Step 2 → Step 3 workflow
+- The persistent-workspace order: Current Context → Recommendation → Tasks
 - Task create, read, update, and delete behavior
 - Recommendation and scoring logic
 - Readiness and blocking behavior
@@ -284,7 +284,7 @@ Borders establish structure. Shadows establish elevation. Do not add shadows mer
 
 **Status: Locked v1.**
 
-Use Lucide as the icon-family direction when an icon improves comprehension or interaction. Do not add icons decoratively, make meaning icon-only, or use overly literal/futuristic AI iconography.
+Use `lucide-react` as the Lucide implementation when an icon improves comprehension or interaction. Import icons individually and allow them to inherit semantic color through `currentColor`. Do not add icons decoratively, make meaning icon-only, or use overly literal/futuristic AI iconography.
 
 Typical sizes:
 
@@ -295,6 +295,8 @@ Typical sizes:
 Potential icons include `Clock`, `MapPin`, `Plus`, `Pencil`, `Trash2`, `RotateCcw`, `Check`, `CircleAlert`, `Info`, `ChevronDown`, and `LoaderCircle`.
 
 Interactive icon buttons require accessible names.
+
+Metadata icons are decorative when adjacent text communicates the complete meaning and should use `aria-hidden="true"`. Action text remains visible; icons supplement rather than replace labels.
 
 ### 3.8 Motion
 
@@ -486,7 +488,7 @@ Contains:
 - Typographic WhatNext identity
 - Supporting product statement where appropriate
 
-Reset sample tasks belongs with the Step 1 task-management controls. Treat it as a low-emphasis task-management and demo utility, not as a global product action.
+Reset sample tasks belongs with the Your Tasks management controls. Treat it as a low-emphasis task-management and demo utility, not as a global product action.
 
 Use a typographic WhatNext wordmark for v1. Do not invent a permanent logo, leaf mark, sidebar navigation, tabs, account menu, or mobile navigation.
 
@@ -593,7 +595,13 @@ Empty states should feel recovery-oriented rather than like errors. They should 
 
 ### 6.1 Workflow hierarchy
 
-Preserve the clear Step 1 → Step 2 → Step 3 progression. Each step should be easy to scan, while the final recommendation receives the strongest emphasis. Do not introduce navigation structures that fragment this workflow without a separate product decision.
+WhatNext uses a persistent-workspace hierarchy rather than a numbered wizard. Compose the page in this order:
+
+1. Current Context
+2. Recommendation, including Why This Task and Suggested Plan
+3. Tasks
+
+Section numbering is not required. Use headings, spacing, surfaces, and proportion to make each region easy to scan, with the Recommendation receiving the strongest emphasis. On desktop, use a moderately wide centered workspace with compact vertical rhythm. Preserve the same semantic and DOM order at narrower widths rather than introducing new navigation or CSS-only visual reordering.
 
 ### 6.2 Task information hierarchy
 

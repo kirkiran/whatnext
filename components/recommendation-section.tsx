@@ -85,10 +85,10 @@ export function RecommendationSection({
       <div className="flex flex-col gap-ds-6">
         <div className="space-y-ds-2">
           <h2 className="text-section-title text-content-primary">
-            Step 3: Your recommended next action
+            Recommended Next Action
           </h2>
           <p className="text-body-small text-content-secondary">
-            Based on your tasks and current situation, here is the next best step.
+            Here’s what fits your current situation.
           </p>
         </div>
 
