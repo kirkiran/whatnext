@@ -103,7 +103,7 @@ export function RecommendationSection({
         </div>
 
         {recommendation ? (
-          <div className="space-y-ds-5 border-t border-line-brand pt-ds-8">
+          <div className="space-y-ds-5 border-t border-line-brand pt-ds-6">
             <div className="space-y-ds-4 px-ds-1">
               <div className="space-y-ds-2">
                 <Badge variant="brand" className="text-eyebrow uppercase">

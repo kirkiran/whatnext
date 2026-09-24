@@ -1,7 +1,14 @@
 "use client";
 
-import { ChangeEvent } from "react";
-import { AudioWaveform, BellRing, Clock, MapPin } from "lucide-react";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
+import {
+  AudioWaveform,
+  BellRing,
+  ChevronDown,
+  Clock,
+  Info,
+  MapPin,
+} from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { MetadataItem } from "@/components/ui/metadata-item";
 import { Select } from "@/components/ui/select";
@@ -73,7 +80,7 @@ export function CurrentContextSection({
             options={priorityOptions}
             value={context.interruptionRisk}
             onChange={handleChange}
-            helperText="High interruption favors shorter, lower-focus tasks."
+            infoText="High interruption favors shorter, lower-focus tasks."
             icon={BellRing}
           />
 
@@ -91,7 +98,7 @@ export function CurrentContextSection({
 
         <div className="flex flex-col gap-ds-3 rounded-control bg-surface-secondary px-ds-4 py-ds-3 sm:flex-row sm:items-center">
           <p className="shrink-0 text-label text-content-muted">Using now</p>
-          <dl className="flex flex-wrap gap-x-ds-5 gap-y-ds-2">
+          <dl className="flex flex-wrap items-center gap-x-ds-5 gap-y-ds-2">
             <ContextDetail
               label="Time available"
               value={`${context.timeAvailable} minutes`}
@@ -127,7 +134,7 @@ type SelectFieldProps<T extends string> = {
   value: T;
   onChange: (event: ChangeEvent<HTMLSelectElement>) => void;
   suffix?: string;
-  helperText?: string;
+  infoText?: string;
   getOptionLabel?: (option: T) => string;
   icon: LucideIcon;
 };
@@ -140,17 +147,18 @@ function SelectField<T extends string>({
   value,
   onChange,
   suffix,
-  helperText,
+  infoText,
   getOptionLabel,
   icon: Icon,
 }: SelectFieldProps<T>) {
-  const helperTextId = helperText ? `${id}-helper` : undefined;
-
   return (
     <div className="space-y-ds-2">
-      <label className="block text-label text-content-secondary" htmlFor={id}>
-        {label}
-      </label>
+      <div className="flex h-ds-5 items-center gap-ds-1">
+        <label className="block text-label text-content-secondary" htmlFor={id}>
+          {label}
+        </label>
+        {infoText ? <FieldInfo label={label}>{infoText}</FieldInfo> : null}
+      </div>
       <div className="relative">
         <Icon
           aria-hidden="true"
@@ -162,8 +170,7 @@ function SelectField<T extends string>({
           name={name}
           value={value}
           onChange={onChange}
-          aria-describedby={helperTextId}
-          className="pl-ds-10"
+          className="appearance-none pl-ds-10"
         >
           {options.map((option) => (
             <option key={option} value={option}>
@@ -175,10 +182,71 @@ function SelectField<T extends string>({
             </option>
           ))}
         </Select>
+        <ChevronDown
+  aria-hidden="true"
+  className="pointer-events-none absolute right-ds-3 top-1/2 size-icon-compact -translate-y-1/2 text-content-muted"
+  strokeWidth={1.75}
+/>
       </div>
-      {helperText ? (
-        <p id={helperTextId} className="text-body-small text-content-muted">
-          {helperText}
+    </div>
+  );
+}
+
+type FieldInfoProps = {
+  children: React.ReactNode;
+  label: string;
+};
+
+function FieldInfo({ children, label }: FieldInfoProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    function handlePointerDown(event: PointerEvent) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen]);
+
+  return (
+    <div ref={containerRef} className="relative">
+      <button
+        type="button"
+        aria-label={`More information about ${label}`}
+        aria-expanded={isOpen}
+        onClick={() => setIsOpen((current) => !current)}
+        className="inline-flex cursor-pointer items-center justify-center rounded-small p-ds-1 text-content-muted hover:text-content-primary focus-visible:outline-none focus-visible:ring-system focus-visible:ring-focus focus-visible:ring-offset-system"
+      >
+        <Info
+          aria-hidden="true"
+          className="size-icon-compact"
+          strokeWidth={1.75}
+        />
+      </button>
+
+      {isOpen ? (
+        <p className="absolute right-0 top-full z-10 mt-ds-2 w-64 rounded-control border border-line bg-surface-elevated p-ds-3 text-body-small text-content-secondary shadow-2">
+          {children}
         </p>
       ) : null}
     </div>
@@ -193,9 +261,9 @@ type ContextDetailProps = {
 
 function ContextDetail({ label, value, icon }: ContextDetailProps) {
   return (
-    <div>
+    <div className="flex items-center">
       <dt className="sr-only">{label}</dt>
-      <dd>
+      <dd className="flex items-center">
         <MetadataItem icon={icon}>{value}</MetadataItem>
       </dd>
     </div>
