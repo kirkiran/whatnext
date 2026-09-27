@@ -47,7 +47,7 @@ export function CurrentContextSection({
             Current Context
           </h2>
           <p className="text-body-small text-content-secondary">
-            Tell WhatNext what your situation is right now.
+            Tell EegEnu what your situation is right now.
           </p>
         </div>
 

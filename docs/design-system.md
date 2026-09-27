@@ -1,12 +1,12 @@
-# WhatNext Design System
+# EegEnu Design System
 
 **Version 1.0**
 
 ## 1. Purpose
 
-This document is the canonical design reference for WhatNext. It exists so that future interface work follows a coherent system instead of introducing one-off visual decisions.
+This document is the canonical design reference for EegEnu. It exists so that future interface work follows a coherent system instead of introducing one-off visual decisions.
 
-WhatNext helps people decide what to do next when their day feels busy or messy. The interface should reduce the thinking required to move forward while preserving the product's existing behavior.
+EegEnu helps people decide what to do next when their day feels busy or messy. The interface should reduce the thinking required to move forward while preserving the product's existing behavior.
 
 This system is organized as:
 
@@ -37,7 +37,7 @@ The practical outcome is efficiency, but the interface should create clarity and
 
 The core personality is **calm competence**.
 
-WhatNext should feel:
+EegEnu should feel:
 
 - Calm
 - Capable
@@ -59,7 +59,7 @@ It should not feel:
 
 ### Primary design principle
 
-> When life feels busy, WhatNext reduces the thinking required to move forward.
+> When life feels busy, EegEnu reduces the thinking required to move forward.
 
 ### Trust over magic
 
@@ -478,7 +478,7 @@ Future overlays must support keyboard navigation, focus management, and Escape b
 
 ## 5. Product components
 
-Product components express WhatNext-specific hierarchy and meaning while consuming primitives and semantic tokens.
+Product components express EegEnu-specific hierarchy and meaning while consuming primitives and semantic tokens.
 
 During the upcoming UI work, the current product is expected to require the App Header, Task Item, Context Field, Recommendation, Suggested Plan, relevant Empty States, and only the primitives needed to support that interface. Other Defined components are not implementation requirements until the current product UI needs them.
 
@@ -490,12 +490,12 @@ Expected for the current UI.
 
 Contains:
 
-- Typographic WhatNext identity
+- Typographic EegEnu identity
 - Supporting product statement where appropriate
 
 Reset sample tasks belongs with the Your Tasks management controls. Treat it as a low-emphasis task-management and demo utility, not as a global product action.
 
-Use a typographic WhatNext wordmark for v1. Do not invent a permanent logo, leaf mark, sidebar navigation, tabs, account menu, or mobile navigation.
+Use a typographic EegEnu wordmark for v1. Do not invent a permanent logo, leaf mark, sidebar navigation, tabs, account menu, or mobile navigation.
 
 ### 5.2 Task Item
 
@@ -580,7 +580,7 @@ Locked behavior:
 
 The intended feeling is:
 
-> When I finish this, WhatNext has already thought about what could follow.
+> When I finish this, EegEnu has already thought about what could follow.
 
 ### 5.6 Empty State
 
@@ -606,7 +606,7 @@ Empty states should feel recovery-oriented rather than like errors. They should 
 
 ### 6.1 Workflow hierarchy
 
-WhatNext uses a persistent-workspace hierarchy rather than a numbered wizard. Compose the page in this order:
+EegEnu uses a persistent-workspace hierarchy rather than a numbered wizard. Compose the page in this order:
 
 1. Current Context
 2. Recommendation, including Why This Task and Suggested Plan
