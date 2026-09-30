@@ -86,13 +86,13 @@ Capture should feel successful even when interpretation is incomplete.
 
 EegEnu's first responsibility is to preserve what the user meant, not to make the task appear more complete.
 
-It must not invent commitments, deadlines, priorities, locations, or other facts merely to populate the task model.
+It must not invent commitments, deadlines, priorities, locations, or other user facts merely to populate the task model. For V1, required Task metadata may use reasonable system estimates under the decision in Section 11; estimates must not be treated as user facts.
 
 ### Extract before inferring
 
 Information explicitly supplied by the user takes precedence.
 
-Reasonable inference may follow extraction, but unsupported information should remain unknown.
+Reasonable inference may follow extraction. Where information is unsupported, it remains unknown unless a system estimate is applied for V1 recommendation compatibility; that estimate is not an inference from the capture.
 
 Unknown is better than confidently wrong.
 
@@ -106,7 +106,7 @@ A field being empty is not itself a reason to question the user.
 
 EegEnu may ask a follow-up question when clarification is genuinely necessary to preserve the user's intended action.
 
-It should not ask questions merely to complete optional task metadata.
+It should not ask questions merely to obtain duration, urgency, importance, focus, location, readiness, or partial-progress metadata, even when the existing Task model requires it.
 
 Clarify intent, not metadata.
 
@@ -144,11 +144,12 @@ Structured information derived from a capture should conceptually distinguish:
 
 - **Explicit** — directly stated by the user.
 - **Inferred** — supplied by EegEnu because the language reasonably supports it.
-- **Unknown** — insufficient evidence to determine the value reliably.
+- **Estimated** — supplied by the system as a pragmatic value needed to make the intention usable by the existing recommendation system.
+- **Unknown** — insufficient basis and no operational estimate applied.
 
 This distinction exists to prevent implementation defaults or AI guesses from being treated as user-provided facts.
 
-The exact technical representation has not yet been decided.
+The original capture remains the source of truth. An estimate is not a user fact and must not replace explicit information. The exact technical representation remains an implementation detail; V1 does not require a comprehensive uncertainty architecture.
 
 ## 7. Boundaries / Non-Goals
 
@@ -219,6 +220,8 @@ No single positive outcome is assumed in advance.
 These examples are intentionally written in realistic shorthand rather than polished natural language.
 
 Personal names and sensitive details from the original research inputs have been anonymized for repository documentation.
+
+The expectations below describe what the capture supports as user information. Instructions not to invent metadata, or statements that it remains unknown, do not prohibit separately distinguished system estimates for required Task fields under Section 11. Such estimates must preserve the intended action and must not be presented as facts supplied by the user.
 
 ### Eval 01
 
@@ -354,21 +357,23 @@ The initial cases suggest that future evaluation should test:
 
 This initial set is not considered complete. Additional adversarial and boundary cases should be added after the current EegEnu task model is audited.
 
-## 11. Open Architecture Question
+## 11. V1 Decision — Pragmatic Interpretation Bridge
 
-The current EegEnu task and recommendation model was designed around structured tasks.
+The architecture question comparing existing defaults, genuine unknowns, and separate capture is resolved for this bounded V1 experiment. EegEnu will use a pragmatic interpretation bridge:
 
-Before Capture → Intent V1 is designed or implemented, the existing architecture must be audited to determine:
+**Natural-language capture → understand the intended action → derive enough of the existing Task structure to use the current recommendation engine.**
 
-> What is the minimum information EegEnu actually needs to turn a captured intention into something its contextual recommendation engine can use?
+Preserve the original capture as the source of truth. Use explicit information relevant to the Task model rather than replacing it with defaults or estimates, and infer only when reasonably supported by the language. Where required Task metadata is unsupported, V1 may supply reasonable system estimates instead of requiring the user to complete the structured task form. Explicit, inferred, estimated, and unknown information remain conceptually distinct as defined in Section 6.
 
-In particular, the next technical investigation should compare:
+If EegEnu cannot determine what the person is trying to make happen, it may ask a lightweight clarification. It should clarify intent, not ask questions merely to obtain Task metadata.
 
-1. mapping missing information to existing defaults;
-2. allowing task attributes to remain genuinely unknown;
-3. maintaining a separate captured-intention representation before conversion to a task.
+The existing complete `Task` shape remains the compatibility boundary for recommendation. Capture/interpretation may derive the values required to cross that boundary; the recommendation engine will not be redesigned for this experiment.
 
-No architecture decision has yet been made.
+V1 does not require every existing Task consumer to understand null/unknown values, sophisticated confidence scoring, versioned estimation policies, or a generalized sparse-task recommendation system.
+
+The trade-off is deliberate: estimates may produce imperfect recommendations. The purpose is not perfect task interpretation, but learning whether lower-friction capture helps people put real intentions into EegEnu and receive sufficiently useful recommendations to continue using it. Estimation error is accepted for V1; presenting estimates as user facts is not.
+
+Keep the implementation reversible. This is an experiment bridge, not a claim that estimated metadata is the long-term EegEnu task model. Real-user behavior should determine whether the recommendation model needs to evolve later.
 
 ## 12. Working Product Principles
 
