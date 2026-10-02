@@ -15,6 +15,7 @@ export function CaptureForm({ ready, onSave }: CaptureFormProps) {
   const [capture, setCapture] = useState("");
   const [isInterpreting, setIsInterpreting] = useState(false);
   const [message, setMessage] = useState("");
+  const [needsClarification, setNeedsClarification] = useState(false);
   const inFlight = useRef(false);
   const saveRef = useRef(onSave);
   saveRef.current = onSave;
@@ -25,6 +26,7 @@ export function CaptureForm({ ready, onSave }: CaptureFormProps) {
     inFlight.current = true;
     setIsInterpreting(true);
     setMessage("");
+    setNeedsClarification(false);
     const originalCapture = capture;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 40000);
@@ -39,6 +41,7 @@ export function CaptureForm({ ready, onSave }: CaptureFormProps) {
       const result = parseCaptureResult(await response.json());
       if (result.status === "clarify") {
         setMessage(result.message);
+        setNeedsClarification(true);
         return;
       }
       saveRef.current(result.tasks, originalCapture);
@@ -55,6 +58,16 @@ export function CaptureForm({ ready, onSave }: CaptureFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-ds-3" aria-busy={isInterpreting}>
+      {needsClarification ? (
+        <div
+          id="capture-status"
+          role="status"
+          className="space-y-ds-1 rounded-control border border-status-warning-border bg-status-warning-surface p-ds-4 text-status-warning-text"
+        >
+          <h3 className="text-component-title">Needs clarification</h3>
+          <p className="text-body">{message}</p>
+        </div>
+      ) : null}
       <label htmlFor="capture" className="block text-label text-content-secondary">
         Capture what you need to do
       </label>
@@ -75,9 +88,11 @@ export function CaptureForm({ ready, onSave }: CaptureFormProps) {
       <Button type="submit" variant="primary" disabled={!ready || isInterpreting || !capture.trim()}>
         {isInterpreting ? "Interpreting…" : "Capture"}
       </Button>
-      <p id="capture-status" role="status" className="text-body-small text-content-secondary">
-        {message}
-      </p>
+      {!needsClarification ? (
+        <p id="capture-status" role="status" className="text-body-small text-content-secondary">
+          {message}
+        </p>
+      ) : null}
     </form>
   );
 }

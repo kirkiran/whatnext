@@ -154,6 +154,35 @@ test("clarification, HTTP/network/invalid batch and storage errors retain input 
   }
 });
 
+test("clarification appears once above the input label; success and errors remain below the button", async () => {
+  const question = "What would you like to do with the reports?";
+  let outcome = "clarify";
+  const h = captureHarness(async () => {
+    if (outcome === "error") return new Response("error", { status: 502 });
+    return Response.json(outcome === "clarify"
+      ? { status: "clarify", tasks: [], message: question }
+      : success());
+  }, () => {});
+  await h.submit();
+  const children = find(h.render(), "form").props.children.filter(Boolean);
+  const status = children.find((child) => child.props.id === "capture-status");
+  assert.equal(children[0], status);
+  assert.equal(children[1].type, "label");
+  assert.equal(find(status, "h3").props.children, "Needs clarification");
+  assert.equal(find(status, "p").props.children, question);
+  assert.match(status.props.className, /bg-status-warning-surface/);
+  assert.equal(children.filter((child) => child.props.id === "capture-status").length, 1);
+  assert.equal(find(h.render(), "textarea").props.value, original);
+  for (outcome of ["error", "success"]) {
+    await h.submit();
+    const nextChildren = find(h.render(), "form").props.children.filter(Boolean);
+    const statusIndex = nextChildren.findIndex((child) => child.props.id === "capture-status");
+    assert.ok(statusIndex > nextChildren.findIndex((child) => child.type === "Button"));
+    assert.equal(nextChildren[statusIndex].type, "p");
+    assert.equal(find(h.render(), "h3"), undefined);
+  }
+});
+
 test("page saves through existing localStorage key; failure leaves task state unchanged", () => {
   const stored = new Map([["whatnext.tasks", JSON.stringify([{ ...draft, id: 1 }])]]);
   let fail = false;
