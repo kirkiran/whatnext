@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AppHeader } from "@/components/app-header";
 import { CurrentContextSection } from "@/components/current-context-section";
 import { RecommendationSection } from "@/components/recommendation-section";
 import { TasksSection } from "@/components/tasks-section";
 import { defaultContext, sampleTasks } from "@/lib/whatnext-data";
 import type { CurrentContext, Task } from "@/lib/whatnext-data";
+import type { CaptureTaskDraft } from "@/lib/capture";
+import { prependCapturedTasks } from "@/lib/captured-tasks";
 
 const TASKS_STORAGE_KEY = "whatnext.tasks";
 const CONTEXT_STORAGE_KEY = "whatnext.context";
@@ -15,6 +17,17 @@ export default function HomePage() {
   const [tasks, setTasks] = useState<Task[]>(sampleTasks);
   const [context, setContext] = useState<CurrentContext>(defaultContext);
   const [hasLoadedStorage, setHasLoadedStorage] = useState(false);
+  const tasksRef = useRef(tasks);
+  tasksRef.current = tasks;
+
+  function handleSaveCapture(drafts: CaptureTaskDraft[], originalCapture: string) {
+    if (!hasLoadedStorage) throw new Error("Tasks are still loading");
+    const nextTasks = prependCapturedTasks(tasksRef.current, drafts, originalCapture);
+    // Confirm the batch is stored before clearing the capture input.
+    window.localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(nextTasks));
+    tasksRef.current = nextTasks;
+    setTasks(nextTasks);
+  }
 
   useEffect(() => {
     const savedTasks = readStoredTasks();
@@ -66,6 +79,8 @@ export default function HomePage() {
             tasks={tasks}
             setTasks={setTasks}
             onResetSampleTasks={handleResetSampleTasks}
+            captureReady={hasLoadedStorage}
+            onSaveCapture={handleSaveCapture}
           />
         </section>
       </div>

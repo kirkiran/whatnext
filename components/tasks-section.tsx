@@ -4,6 +4,8 @@ import { ChangeEvent, FormEvent, MouseEvent, useEffect, useRef, useState } from 
 import { Plus, RotateCcw } from "lucide-react";
 import { TaskForm } from "@/components/task-form";
 import { TaskList } from "@/components/task-list";
+import { CaptureForm } from "@/components/capture-form";
+import type { CaptureTaskDraft } from "@/lib/capture";
 import { Button } from "@/components/ui/button";
 import {
   defaultTaskFormValues,
@@ -15,12 +17,16 @@ type TasksSectionProps = {
   tasks: Task[];
   setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
   onResetSampleTasks: () => void;
+  captureReady: boolean;
+  onSaveCapture: (drafts: CaptureTaskDraft[], originalCapture: string) => void;
 };
 
 export function TasksSection({
   tasks,
   setTasks,
   onResetSampleTasks,
+  captureReady,
+  onSaveCapture,
 }: TasksSectionProps) {
   const [formValues, setFormValues] = useState<TaskFormValues>(defaultTaskFormValues);
   const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
@@ -87,7 +93,7 @@ export function TasksSection({
 
     if (editingTaskId !== null) {
       setTasks((currentTasks) =>
-        currentTasks.map((task) => (task.id === editingTaskId ? nextTask : task)),
+        currentTasks.map((task) => (task.id === editingTaskId ? { ...task, ...nextTask } : task)),
       );
     } else {
       setTasks((currentTasks) => [nextTask, ...currentTasks]);
@@ -162,6 +168,8 @@ export function TasksSection({
             </Button>
           </div>
         </div>
+
+        <CaptureForm ready={captureReady} onSave={onSaveCapture} />
 
         {isFormOpen ? (
           <TaskForm

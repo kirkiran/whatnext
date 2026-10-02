@@ -78,6 +78,12 @@ export function TaskList({
                       ? "Can be done in parts"
                       : "Needs a full session"}
                   </p>
+                  {task.originalCapture !== undefined ? (
+                    <details className="text-metadata text-content-muted">
+                      <summary className="cursor-pointer">Original capture</summary>
+                      <p className="mt-ds-2 whitespace-pre-wrap break-words">{task.originalCapture}</p>
+                    </details>
+                  ) : null}
                 </div>
 
                 <div className="flex shrink-0 gap-ds-2">

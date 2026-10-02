@@ -8,7 +8,7 @@ import type { Task } from "@/lib/whatnext-data";
 
 export const MAX_CAPTURE_LENGTH = 4000;
 export const MAX_CAPTURE_TASKS = 20;
-export type CaptureTaskDraft = Omit<Task, "id">;
+export type CaptureTaskDraft = Omit<Task, "id" | "originalCapture">;
 export type CaptureResult =
   | { status: "success"; tasks: CaptureTaskDraft[]; message: null }
   | { status: "clarify"; tasks: []; message: string };

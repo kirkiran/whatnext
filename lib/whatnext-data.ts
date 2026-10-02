@@ -6,6 +6,7 @@ export type PartialProgressOption = "yes" | "no";
 
 export type Task = {
   id: number;
+  originalCapture?: string;
   name: string;
   duration: number;
   urgency: PriorityLevel;
