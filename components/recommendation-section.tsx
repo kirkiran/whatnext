@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { AudioWaveform, Clock, MapPin } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -17,7 +17,6 @@ import {
   buildSuggestedPlanExplanation,
   generateLocalExplanations,
 } from "@/lib/explanations";
-import type { ExplanationOutput } from "@/lib/explanations";
 import { getRecommendationResult } from "@/lib/recommendation";
 
 type RecommendationSectionProps = {
@@ -33,56 +32,16 @@ export function RecommendationSection({
     () => getRecommendationResult(tasks, context),
     [tasks, context],
   );
-  const [explanations, setExplanations] = useState<ExplanationOutput | null>(null);
 
   const explanationInput = useMemo(
     () => (recommendation ? buildExplanationInput(recommendation, context) : null),
     [recommendation, context],
   );
 
-  const explanationKey = explanationInput ? JSON.stringify(explanationInput) : "";
-
-  useEffect(() => {
-    if (!explanationInput) {
-      setExplanations(null);
-      return;
-    }
-
-    const fallbackExplanations = generateLocalExplanations(explanationInput);
-    const controller = new AbortController();
-
-    setExplanations(fallbackExplanations);
-
-    async function loadExplanations() {
-      try {
-        const response = await fetch("/api/explanations", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(explanationInput),
-          signal: controller.signal,
-        });
-
-        if (!response.ok) {
-          return;
-        }
-
-        const data = (await response.json()) as ExplanationOutput;
-        setExplanations(data);
-      } catch (error) {
-        if (controller.signal.aborted) {
-          return;
-        }
-      }
-    }
-
-    loadExplanations();
-
-    return () => {
-      controller.abort();
-    };
-  }, [explanationInput, explanationKey]);
+  const explanations = useMemo(
+    () => (explanationInput ? generateLocalExplanations(explanationInput) : null),
+    [explanationInput],
+  );
 
   return (
     <section
