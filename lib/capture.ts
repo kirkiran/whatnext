@@ -51,8 +51,7 @@ If any intended action is genuinely unclear, clarify the whole capture; do not s
 Never ask for duration, urgency, importance, focus, location, readiness, or partial-progress metadata.
 For each required field use explicit user information first, then reasonable inference,
 then a reasonable system estimate. Estimates are operational assumptions, not user facts.
-Do not describe estimates as facts in task names. Duration is the positive total estimated
-minutes for the named task, not an invented short session. Avoid obviously unrealistic estimates.
+Do not describe estimates as facts in task names. Duration is the positive total estimated minutes required to perform the captured action itself, not an invented short session. Determine what the user is doing before interpreting time expressions. A time span describing an event, appointment, trip, reservation, or calendar block is not the time required to arrange it. Preserve that referenced timing in the task name; estimate the effort of arranging it separately. For example, “Block my calendar Saturday 5–7” means a few minutes to create the block, not 120 minutes of task effort. Conversely, “Attend a 1-hour appointment” or “Spend 60 minutes researching universities” explicitly describes time spent performing the task: preserve that duration. Explicit task-effort estimates take precedence over system estimates. Avoid obviously unrealistic estimates.
 Do not automatically assign high priority. Preserve explicit blocking and location constraints.
 Split independent outcomes: "Buy milk and call Mom" is two tasks.
 Keep related steps together: "Take photos and send email for the car stain" is one task.

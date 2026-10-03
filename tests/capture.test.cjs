@@ -122,6 +122,8 @@ test("route sends strict schema, configured model, capture only; returns both ou
         assert.equal(options.headers.Authorization, "Bearer test-key");
         const body = JSON.parse(options.body);
         assert.equal(body.model, "test-model");
+        assert.ok(body.instructions.includes("A time span describing an event, appointment, trip, reservation, or calendar block is not the time required to arrange it."));
+        assert.ok(body.instructions.includes("explicitly describes time spent performing the task: preserve that duration. Explicit task-effort estimates take precedence over system estimates."));
         assert.equal(body.text.format.strict, true);
         assert.equal(body.text.format.schema.additionalProperties, false);
         assert.equal(body.text.format.schema.properties.tasks.items.properties.duration.minimum, 1);
