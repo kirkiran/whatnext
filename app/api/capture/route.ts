@@ -1,3 +1,4 @@
+import { requireUser } from "@/lib/server/auth";
 import {
   captureInstructions,
   captureSchema,
@@ -11,6 +12,9 @@ function error(message: string, status: number) {
 }
 
 export async function POST(request: Request) {
+  const identity = await requireUser();
+  if (identity instanceof Response) return identity;
+
   let capture: string;
   try {
     capture = parseCaptureRequest(await request.json());

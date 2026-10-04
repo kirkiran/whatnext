@@ -18,6 +18,8 @@ function loadModule(relativePath, globals = {}, cache = new Map()) {
     process: { env: {} },
     fetch: () => { throw new Error("Live fetch forbidden in tests"); },
     require: (name) => {
+      if (name === "server-only") return {};
+      if (name === "@clerk/nextjs/server") return { auth: globals.clerkAuth ?? (async () => ({ userId: "user_test", getToken: async () => "test-token" })) };
       assert.ok(name.startsWith("@/"));
       return loadModule(`${name.slice(2)}.ts`, globals, cache);
     },
@@ -45,6 +47,22 @@ const envelope = (result) => ({
 const plain = (value) => JSON.parse(JSON.stringify(value));
 const request = (body) => new Request("http://localhost/api/capture", {
   method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+});
+
+test("Capture rejects missing or failed authentication before reading input or calling OpenAI", async () => {
+  for (const [clerkAuth, status] of [
+    [async () => ({ userId: null }), 401],
+    [async () => { throw new Error("Provider failure with private details"); }, 503],
+  ]) {
+    const { POST } = loadModule("app/api/capture/route.ts", {
+      clerkAuth,
+      process: { env: { OPENAI_API_KEY: "test-key" } },
+      fetch: () => { assert.fail("Unauthenticated OpenAI call"); },
+    });
+    const response = await POST({ json: () => { assert.fail("Input read before auth"); } });
+    assert.equal(response.status, status);
+    assert.doesNotMatch(JSON.stringify(await response.json()), /private details/);
+  }
 });
 
 test("request requires only nonblank bounded capture and preserves original text", () => {

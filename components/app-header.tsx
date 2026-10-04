@@ -1,3 +1,7 @@
+"use client";
+
+import { SignOutButton } from "@clerk/nextjs";
+
 export function AppHeader() {
   return (
     <header className="flex flex-col gap-ds-3 border-b border-line pb-ds-5 sm:flex-row sm:items-baseline sm:gap-ds-5">
@@ -7,6 +11,11 @@ export function AppHeader() {
       <p className="max-w-3xl text-body-small text-content-secondary sm:border-l sm:border-line-brand sm:pl-ds-5">
         Decide what to do next when your day gets messy
       </p>
+      <SignOutButton redirectUrl="/sign-in">
+        <button type="button" className="text-body-small underline focus-visible:outline focus-visible:outline-2 sm:ml-auto">
+          Sign out
+        </button>
+      </SignOutButton>
     </header>
   );
 }
