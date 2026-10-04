@@ -8,9 +8,9 @@ export default function TermsPage() {
   return (
     <LegalPage title="Terms of Use">
       <section>
-        <h2>About this experiment and these terms</h2>
+        <h2>About EegEnu and these terms</h2>
         <p>EegEnu is operated by Kiran Suryakant Shahapur, an individual. You must be at least 18 and invited to participate. By using EegEnu, you agree to these Terms of Use and acknowledge the <Link href="/privacy">Privacy Policy</Link>, which explains how your information is processed.</p>
-        <p>This is a free, small portfolio and product experiment, with no payments or subscriptions. The service may change, be suspended or end. It is not intended to be a dependable record of critical obligations.</p>
+        <p>EegEnu is a free, early-stage product with no payments or subscriptions. The service may change, be suspended or end. It is not intended to be a dependable record of critical obligations.</p>
       </section>
       <section>
         <h2>Your account and content</h2>
@@ -25,7 +25,7 @@ export default function TermsPage() {
       <section>
         <h2>Acceptable use and ending access</h2>
         <p>Do not use EegEnu unlawfully, submit harmful or rights-infringing content, access another person&apos;s data, bypass access controls, interfere with the service or abuse its providers. Do not submit sensitive information unnecessarily.</p>
-        <p>You may stop using EegEnu or delete your account at any time during the experiment. The in-app deletion flow removes application data and then the Clerk identity, subject to the limitations explained in the Privacy Policy. The operator may suspend or end access for misuse, security reasons or changes to the experiment.</p>
+        <p>You may stop using EegEnu or delete your account at any time. The in-app deletion flow removes application data and then the Clerk identity, subject to the limitations explained in the Privacy Policy. The operator may suspend or end access for misuse, security reasons or changes to EegEnu.</p>
       </section>
       <section>
         <h2>Service limitations and liability</h2>

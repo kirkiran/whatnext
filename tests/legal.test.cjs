@@ -55,6 +55,7 @@ test("legal pages render titles, effective date, operator and contact without au
     assert.match(html, /Effective date: October 4, 2026/);
     assert.match(html, /Kiran Suryakant Shahapur/);
     assert.match(html, /href="mailto:contact@eegenu.com"/);
+    assert.doesNotMatch(html, /\b(experiment|portfolio)\b/i);
     assert.equal(load(file).metadata.title, `${title} | EegEnu`);
   }
 });
@@ -67,6 +68,10 @@ test("privacy preserves material content, telemetry and retention disclosures", 
   assert.match(html, /store:false/);
   assert.match(html, /does not mean zero retention/);
   assert.match(html, /not an automated purge or a fixed retention period/);
+  assert.match(html, /free, early-stage, invite-only product for adults aged 18 or older/);
+  assert.match(html, /understand how people use EegEnu and whether the product is useful/);
+  assert.match(html, /while product evaluation and analysis are active/);
+  assert.match(html, /Aggregated or non-identifying findings may be retained to document product learnings and development/);
   assert.match(html, /does not instantly erase provider backups or logs/);
   for (const provider of ["Clerk", "Supabase", "OpenAI", "Vercel", "Cloudflare"]) assert.ok(html.includes(provider));
 });
