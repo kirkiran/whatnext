@@ -279,12 +279,105 @@ test("workspace distinguishes loading/failure/empty and never accesses legacy br
 test("account change remounts the workspace and invalidates old callbacks before effect cleanup", () => {
   let userId = "user_A";
   const h = harness("app/page.tsx", { clerk: { useAuth: () => ({ isLoaded: true, userId }) } });
-  const first = find(h.render("default"), "TaskWorkspace");
+  const first = find(h.render("default"), "AccountWorkspace");
   assert.equal(first.key, "user_A"); assert.equal(first.props.isCurrentUser(), true);
   userId = "user_B";
-  const second = find(h.render("default"), "TaskWorkspace");
+  const second = find(h.render("default"), "AccountWorkspace");
   assert.equal(second.key, "user_B"); assert.equal(first.props.isCurrentUser(), false);
   userId = null;
-  assert.equal(find(h.render("default"), "TaskWorkspace"), undefined);
+  assert.equal(find(h.render("default"), "AccountWorkspace"), undefined);
   assert.equal(second.props.isCurrentUser(), false);
+});
+function accountHarness(fetch, signOut = async () => {}, confirm = () => true) {
+  const h = harness("components/account-workspace.tsx", {
+    fetch, window: { confirm }, clerk: { useClerk: () => ({ signOut }) },
+  });
+  let current = true;
+  const render = () => h.render("AccountWorkspace", { isCurrentUser: () => current });
+  const action = () => find(render(), "AppHeader").props.accountAction;
+  return { render, action, switchAccount: () => { current = false; } };
+}
+
+test("account deletion confirmation cancellation leaves the workspace unchanged", async () => {
+  let calls = 0;
+  const h = accountHarness(async () => { calls++; }, async () => assert.fail("Unexpected sign-out"), message => {
+    assert.equal(message, "Permanently delete your EegEnu account and all stored tasks? This cannot be undone.");
+    return false;
+  });
+  await h.action().props.onClick();
+  assert.equal(calls, 0);
+  assert.ok(find(h.render(), "TaskWorkspace"));
+});
+
+test("account deletion blocks duplicate submissions and current workspace saves, then signs out on full confirmation", async () => {
+  let resolve, calls = 0;
+  const signOutCalls = [];
+  const h = accountHarness(async (url, options) => {
+    calls++; assert.equal(url, "/api/account"); assert.equal(options.method, "DELETE");
+    assert.deepEqual(JSON.parse(options.body), { confirmed: true });
+    return new Promise(done => { resolve = done; });
+  }, async options => signOutCalls.push(options));
+  const oldWorkspace = find(h.render(), "TaskWorkspace");
+  const action = h.action();
+  const pending = action.props.onClick();
+  await action.props.onClick();
+  assert.equal(calls, 1);
+  assert.equal(oldWorkspace.props.isCurrentUser(), false);
+  assert.equal(find(h.render(), "TaskWorkspace"), undefined);
+  assert.equal(h.action().props.isLoading, true);
+  resolve(Response.json({ dataDeleted: true, deleted: true }));
+  await pending;
+  assert.deepEqual(plain(signOutCalls), [{ redirectUrl: "/sign-in" }]);
+  assert.match(JSON.stringify(h.render()), /account and stored tasks were deleted/);
+  assert.equal(find(h.render(), "TaskWorkspace"), undefined);
+  assert.equal(h.action().props.disabled, true);
+});
+
+test("confirmed account deletion remains successful when browser sign-out fails", async () => {
+  const h = accountHarness(async () => Response.json({ dataDeleted: true, deleted: true }), async () => { throw new Error("sign-out unavailable"); });
+  await h.action().props.onClick();
+  assert.match(JSON.stringify(h.render()), /account and stored tasks were deleted/);
+  assert.doesNotMatch(JSON.stringify(h.render()), /Could not confirm/);
+  assert.equal(find(h.render(), "TaskWorkspace"), undefined);
+  assert.ok(find(h.render(), "default")); // mocked next/link export
+});
+
+test("partial account deletion hides removed data and permits retry without premature sign-out", async () => {
+  let attempts = 0, signedOut = 0;
+  const h = accountHarness(async () => {
+    attempts++;
+    return attempts === 1 ? Response.json({ dataDeleted: true, error: "failure" }, { status: 503 })
+      : Response.json({ dataDeleted: true, deleted: true });
+  }, async () => { signedOut++; });
+  const oldWorkspace = find(h.render(), "TaskWorkspace");
+  await h.action().props.onClick();
+  assert.equal(signedOut, 0);
+  assert.equal(find(h.render(), "TaskWorkspace"), undefined);
+  assert.equal(oldWorkspace.props.isCurrentUser(), false);
+  assert.match(JSON.stringify(h.render()), /task data was removed/);
+  assert.equal(h.action().props.disabled, false);
+  await h.action().props.onClick();
+  assert.equal(attempts, 2); assert.equal(signedOut, 1);
+});
+
+test("unconfirmed database deletion and network failures do not announce success or sign out", async () => {
+  for (const mode of ["database", "network", "malformed"]) {
+    const h = accountHarness(async () => {
+      if (mode === "network") throw new Error("offline");
+      if (mode === "malformed") return Response.json({ deleted: true });
+      return Response.json({ error: "failure" }, { status: 503 });
+    }, async () => assert.fail("Premature sign-out"));
+    await h.action().props.onClick();
+    assert.match(JSON.stringify(h.render()), /Could not confirm/);
+    assert.doesNotMatch(JSON.stringify(h.render()), /account and stored tasks were deleted/);
+    assert.ok(find(h.render(), "TaskWorkspace"));
+  }
+});
+
+test("old-account deletion responses cannot sign out a new account", async () => {
+  let resolve;
+  const h = accountHarness(() => new Promise(done => { resolve = done; }), async () => assert.fail("Signed out a different account"));
+  const pending = h.action().props.onClick();
+  h.switchAccount(); resolve(Response.json({ dataDeleted: true, deleted: true }));
+  await pending;
 });
