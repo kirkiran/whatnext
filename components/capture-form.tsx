@@ -6,14 +6,16 @@ import { controlClassName } from "@/components/ui/control-styles";
 import { MAX_CAPTURE_LENGTH, parseCaptureResult } from "@/lib/capture";
 import type { TaskAddition } from "@/lib/task-storage";
 import { TaskApiError } from "@/lib/task-api";
+import type { BrowserExperimentEvent } from "@/lib/experiment-events";
 
 type CaptureFormProps = {
   ready: boolean;
   blocked?: boolean;
   onSave: (addition: TaskAddition) => Promise<void>;
+  onEvent?: (event: BrowserExperimentEvent) => void;
 };
 
-export function CaptureForm({ ready, blocked = false, onSave }: CaptureFormProps) {
+export function CaptureForm({ ready, blocked = false, onSave, onEvent }: CaptureFormProps) {
   const [capture, setCapture] = useState("");
   const [isInterpreting, setIsInterpreting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -37,6 +39,7 @@ export function CaptureForm({ ready, blocked = false, onSave }: CaptureFormProps
     let addition = pendingAddition;
     try {
       if (!addition) {
+        onEvent?.({ name: "capture_submitted" });
         const response = await fetch("/api/capture", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -46,6 +49,7 @@ export function CaptureForm({ ready, blocked = false, onSave }: CaptureFormProps
         if (!response.ok) throw new Error("Capture failed");
         const result = parseCaptureResult(await response.json());
         if (result.status === "clarify") {
+          onEvent?.({ name: "capture_clarification_requested" });
           setMessage(result.message);
           setNeedsClarification(true);
           return;
@@ -61,6 +65,7 @@ export function CaptureForm({ ready, blocked = false, onSave }: CaptureFormProps
       setCapture("");
       setMessage(`Added ${addition.tasks.length} ${addition.tasks.length === 1 ? "task" : "tasks"}.`);
     } catch (failure) {
+      onEvent?.({ name: "capture_failed", stage: addition ? "persistence" : "interpretation" });
       if (failure instanceof TaskApiError && failure.status === 400) {
         setPendingAddition(null);
         setMessage("The task details could not be saved. Your text is still here. Try again or use Add task.");

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { AudioWaveform, Clock, MapPin } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -22,16 +22,25 @@ import { getRecommendationResult } from "@/lib/recommendation";
 type RecommendationSectionProps = {
   tasks: Task[];
   context: CurrentContext;
+  onSurface?: () => void;
 };
 
 export function RecommendationSection({
   tasks,
   context,
+  onSurface,
 }: RecommendationSectionProps) {
   const recommendation = useMemo(
     () => getRecommendationResult(tasks, context),
     [tasks, context],
   );
+  const surfaced = useRef(false);
+  useEffect(() => {
+    if (recommendation && !surfaced.current && onSurface) {
+      surfaced.current = true;
+      onSurface();
+    }
+  }, [recommendation, onSurface]);
 
   const explanationInput = useMemo(
     () => (recommendation ? buildExplanationInput(recommendation, context) : null),

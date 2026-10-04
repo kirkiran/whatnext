@@ -24,14 +24,18 @@ import {
 type CurrentContextSectionProps = {
   context: CurrentContext;
   setContext: React.Dispatch<React.SetStateAction<CurrentContext>>;
+  onInteract?: () => void;
 };
 
 export function CurrentContextSection({
   context,
   setContext,
+  onInteract,
 }: CurrentContextSectionProps) {
   function handleChange(event: ChangeEvent<HTMLSelectElement>) {
     const { name, value } = event.target;
+    if (context[name as keyof CurrentContext] === value) return;
+    onInteract?.();
 
     setContext((currentContext) => ({
       ...currentContext,

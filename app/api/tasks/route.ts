@@ -3,6 +3,7 @@ import { createUserDatabase } from "@/lib/server/supabase";
 import { addTasks, listTasks } from "@/lib/server/tasks";
 import { readTaskBody, taskResponse } from "@/lib/server/task-http";
 import { parseTaskAddition } from "@/lib/task-storage";
+import { recordExperimentEvents } from "@/lib/server/experiment-events";
 
 export async function GET() {
   const identity = await requireUser();
@@ -24,7 +25,14 @@ export async function POST(request: Request) {
     return taskResponse({ error: "Send a valid task batch and addition request UUID." }, 400);
   }
   try {
-    return taskResponse({ tasks: await addTasks(await createUserDatabase(identity), addition) });
+    const database = await createUserDatabase(identity);
+    const tasks = await addTasks(database, addition);
+    const source = addition.originalCapture === undefined ? "manual" : "capture";
+    await recordExperimentEvents(database, identity.userId, [
+      { name: "task_added", source, task_count: tasks.length },
+      ...(source === "capture" ? [{ name: "capture_succeeded" as const, task_count: tasks.length }] : []),
+    ], addition.requestId);
+    return taskResponse({ tasks });
   } catch {
     // A response can be lost after commit. The caller must retain the request UUID.
     return taskResponse({ error: "Could not confirm this addition. Retry with the same request ID." }, 503);

@@ -12,6 +12,7 @@ function harness(file, globals = {}) {
   let cursor = 0;
   let effects = [];
   const hooks = {
+    useMemo(compute) { return compute(); },
     useState(initial) {
       const index = cursor++;
       if (!(index in slots)) slots[index] = initial;
@@ -62,7 +63,7 @@ function harness(file, globals = {}) {
 
 function find(tree, type) {
   if (!tree || typeof tree !== "object") return undefined;
-  if (tree.type === type) return tree;
+  if (tree.type === type || (typeof tree.type === "function" && tree.type.name === type)) return tree;
   for (const child of [tree.props?.children].flat(Infinity)) {
     const match = find(child, type);
     if (match) return match;
@@ -75,9 +76,9 @@ const success = (tasks = [draft]) => ({ status: "success", tasks, message: null 
 const submit = { preventDefault() {} };
 const original = "  Email invoice\nBuy milk  ";
 
-function captureHarness(fetch, onSave) {
+function captureHarness(fetch, onSave, onEvent) {
   const h = harness("components/capture-form.tsx", { fetch });
-  const render = () => h.render("CaptureForm", { ready: true, onSave });
+  const render = () => h.render("CaptureForm", { ready: true, onSave, onEvent });
   find(render(), "textarea").props.onChange({ target: { value: original } });
   return { render, submit: () => find(render(), "form").props.onSubmit(submit) };
 }
@@ -380,4 +381,76 @@ test("old-account deletion responses cannot sign out a new account", async () =>
   const pending = h.action().props.onClick();
   h.switchAccount(); resolve(Response.json({ dataDeleted: true, deleted: true }));
   await pending;
+});
+
+test("Capture analytics separates fresh interpretation, clarification, persistence failure and Retry save", async () => {
+  const events = [];
+  let interpretations = 0, saves = 0;
+  const h = captureHarness(async () => { interpretations++; return Response.json(success()); }, async () => {
+    saves++;
+    if (saves === 1) throw new Error("Unconfirmed save");
+  }, event => events.push(plain(event)));
+  await h.submit();
+  assert.deepEqual(events, [{ name: "capture_submitted" }, { name: "capture_failed", stage: "persistence" }]);
+  await h.submit();
+  assert.equal(interpretations, 1); assert.equal(saves, 2);
+  assert.equal(events.length, 2); // Success evidence belongs to the durable POST.
+  const clarify = [];
+  const c = captureHarness(async () => Response.json({ status: "clarify", tasks: [], message: "What action?" }),
+    async () => assert.fail("Saved clarification"), event => clarify.push(plain(event)));
+  await c.submit();
+  assert.deepEqual(clarify, [{ name: "capture_submitted" }, { name: "capture_clarification_requested" }]);
+  const failed = [];
+  const f = captureHarness(async () => { throw new Error("Private interpretation details"); },
+    async () => assert.fail("Saved failed interpretation"), event => failed.push(plain(event)));
+  await f.submit();
+  assert.deepEqual(failed, [{ name: "capture_submitted" }, { name: "capture_failed", stage: "interpretation" }]);
+});
+
+test("context analytics emits only actual control changes, not defaults or no-op values", () => {
+  const h = harness("components/current-context-section.tsx");
+  const { defaultContext } = h.load("lib/whatnext-data.ts");
+  let interactions = 0, changes = 0;
+  const props = { context: defaultContext, setContext(update) { changes++; update(defaultContext); }, onInteract: () => { interactions++; } };
+  const tree = h.render("CurrentContextSection", props);
+  h.effects();
+  assert.equal(interactions, 0);
+  const control = find(tree, "SelectField");
+  control.props.onChange({ target: { name: "timeAvailable", value: defaultContext.timeAvailable } });
+  assert.equal(interactions, 0); assert.equal(changes, 0);
+  control.props.onChange({ target: { name: "timeAvailable", value: "60" } });
+  assert.equal(interactions, 1); assert.equal(changes, 1);
+});
+
+test("recommendation analytics emits once for a real recommendation, never empty/no-match or rerender", () => {
+  const h = harness("components/recommendation-section.tsx");
+  const context = { timeAvailable: "20", currentFocus: "medium", interruptionRisk: "low", location: "home" };
+  let surfaces = 0;
+  const onSurface = () => { surfaces++; };
+  h.render("RecommendationSection", { tasks: [], context, onSurface }); h.effects();
+  h.render("RecommendationSection", { tasks: [{ ...draft, id: 1, readiness: "blocked" }], context, onSurface }); h.effects();
+  assert.equal(surfaces, 0);
+  h.render("RecommendationSection", { tasks: [{ ...draft, id: 1 }], context, onSurface }); h.effects();
+  assert.equal(surfaces, 1);
+  h.render("RecommendationSection", { tasks: [{ ...draft, id: 2 }], context, onSurface }); h.effects();
+  assert.equal(surfaces, 1);
+});
+
+test("browser telemetry failures resolve silently without retries or private fields", async () => {
+  let requests = 0;
+  const h = harness("components/task-workspace.tsx", { fetch: async (_url, options) => {
+    requests++;
+    assert.deepEqual(JSON.parse(options.body), { name: "context_interacted" });
+    throw new Error("Telemetry offline");
+  } });
+  const { recordBrowserEvent } = h.load("lib/experiment-client.ts");
+  await recordBrowserEvent({ name: "context_interacted" });
+  await recordBrowserEvent({ name: "context_interacted", context: "private" });
+  assert.equal(requests, 1);
+  let current = true;
+  const tree = h.render("TaskWorkspace", { isCurrentUser: () => current });
+  assert.equal(find(tree, "RecommendationSection"), undefined); // Initial load unresolved.
+  current = false;
+  find(tree, "CurrentContextSection").props.onInteract();
+  assert.equal(requests, 1); // Old workspace cannot enqueue an event for a new identity.
 });

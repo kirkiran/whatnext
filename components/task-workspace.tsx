@@ -10,6 +10,8 @@ import { defaultContext } from "@/lib/whatnext-data";
 import type { CurrentContext } from "@/lib/whatnext-data";
 import { createDurableTasks } from "@/lib/durable-tasks";
 import type { TaskState } from "@/lib/durable-tasks";
+import { recordBrowserEvent } from "@/lib/experiment-client";
+import type { BrowserExperimentEvent } from "@/lib/experiment-events";
 
 export function TaskWorkspace({ isCurrentUser }: { isCurrentUser: () => boolean }) {
   const [context, setContext] = useState<CurrentContext>(defaultContext);
@@ -17,6 +19,9 @@ export function TaskWorkspace({ isCurrentUser }: { isCurrentUser: () => boolean 
   const controllerRef = useRef<ReturnType<typeof createDurableTasks> | null>(null);
   const identityCheckRef = useRef(isCurrentUser);
   identityCheckRef.current = isCurrentUser;
+  function onEvent(event: BrowserExperimentEvent) {
+    if (identityCheckRef.current()) void recordBrowserEvent(event);
+  }
   useEffect(() => {
     const controller = createDurableTasks(setState, undefined, () => identityCheckRef.current());
     controllerRef.current = controller;
@@ -28,7 +33,7 @@ export function TaskWorkspace({ isCurrentUser }: { isCurrentUser: () => boolean 
   if (state.unauthorized) return <p role="alert">Sign in to continue. <Link href="/sign-in" className="underline">Sign in</Link></p>;
   return (
     <section className="flex flex-col gap-ds-6">
-      <CurrentContextSection context={context} setContext={setContext} />
+      <CurrentContextSection context={context} setContext={setContext} onInteract={() => onEvent({ name: "context_interacted" })} />
       {state.tasks === null ? (
         <section className="rounded-card border border-line bg-surface-primary p-ds-5" aria-busy={state.loading}>
           <h2 className="text-section-title">Your Tasks</h2>
@@ -37,12 +42,13 @@ export function TaskWorkspace({ isCurrentUser }: { isCurrentUser: () => boolean 
         </section>
       ) : (
         <>
-          <RecommendationSection tasks={state.tasks} context={context} />
+          <RecommendationSection tasks={state.tasks} context={context} onSurface={() => onEvent({ name: "recommendation_surfaced" })} />
           <div className="flex flex-wrap items-center gap-ds-3">
             <Button disabled={state.busy} isLoading={state.refreshing} loadingLabel="Refreshing tasks" onClick={() => void controllerRef.current?.refresh()}>Refresh tasks</Button>
             <p role="status" className="text-body-small text-content-secondary">{state.error}</p>
           </div>
           <TasksSection tasks={state.tasks} busy={state.busy} unresolvedAddition={state.unresolvedAddition}
+            onEvent={onEvent}
             onAdd={addition => controllerRef.current!.add(addition)}
             onEditTask={(id, draft) => controllerRef.current!.edit(id, draft)}
             onDeleteTask={id => controllerRef.current!.delete(id)} />

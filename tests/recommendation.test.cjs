@@ -5,8 +5,8 @@ const vm = require("node:vm");
 const { test } = require("node:test");
 const ts = require("typescript");
 
-// Compile in memory, matching the existing tests. Effects and fetch are trapped:
-// recommendations must be complete during render without asynchronous I/O.
+// Recommendations remain complete during render. Exposure effects are not run
+// here; their telemetry semantics are tested separately in capture-ui.test.cjs.
 const cache = new Map();
 let fetchCalls = 0;
 function load(relative) {
@@ -25,7 +25,8 @@ function load(relative) {
     require(name) {
       if (name === "react") return {
         useMemo: (compute) => compute(),
-        useEffect() { throw new Error("Recommendation must not depend on effects"); },
+        useRef: (value) => ({ current: value }),
+        useEffect() {},
         useState() { throw new Error("Explanation must be derived during render"); },
       };
       if (name === "react/jsx-runtime") return require(name);

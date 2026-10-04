@@ -3,6 +3,7 @@ import { createUserDatabase } from "@/lib/server/supabase";
 import { deleteTask, editTask } from "@/lib/server/tasks";
 import { readTaskBody, taskResponse } from "@/lib/server/task-http";
 import { parseTaskDraft, parseTaskId } from "@/lib/task-storage";
+import { recordExperimentEvents } from "@/lib/server/experiment-events";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -17,7 +18,9 @@ export async function PATCH(request: Request, context: RouteContext) {
     return taskResponse({ error: "Send a valid task ID and complete task details." }, 400);
   }
   try {
-    const task = await editTask(await createUserDatabase(identity), id, draft);
+    const database = await createUserDatabase(identity);
+    const task = await editTask(database, id, draft);
+    if (task) await recordExperimentEvents(database, identity.userId, [{ name: "task_edited" }]);
     return task ? taskResponse({ task }) : taskResponse({ error: "Task not found." }, 404);
   } catch {
     return taskResponse({ error: "Could not confirm the edit. Please retry." }, 503);
@@ -36,7 +39,9 @@ export async function DELETE(request: Request, context: RouteContext) {
     return taskResponse({ error: "Send a valid task ID from this application." }, 400);
   }
   try {
-    const deleted = await deleteTask(await createUserDatabase(identity), id);
+    const database = await createUserDatabase(identity);
+    const deleted = await deleteTask(database, id);
+    if (deleted) await recordExperimentEvents(database, identity.userId, [{ name: "task_deleted" }]);
     return deleted ? taskResponse({ deleted: true }) : taskResponse({ error: "Task not found." }, 404);
   } catch {
     return taskResponse({ error: "Could not confirm deletion. Please retry." }, 503);

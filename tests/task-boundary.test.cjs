@@ -13,7 +13,7 @@ function load(file, options = {}, cache = new Map()) {
   }).outputText;
   const module = { exports: {} };
   vm.runInNewContext(source, {
-    module, exports: module.exports, Response, URL, process: { env: options.env ?? {} },
+    module, exports: module.exports, Response, URL, AbortController, setTimeout, clearTimeout, process: { env: options.env ?? {} },
     require(name) {
       if (name === "server-only") return {};
       if (name === "@clerk/nextjs/server") return { auth: options.auth ?? (async () => ({ userId: "user_A", getToken: async () => "token_A" })) };
@@ -163,4 +163,111 @@ test("list/edit/delete preserve task metadata, avoid owner writes and return ind
   assert.equal((await root.GET()).status, 503);
   assert.equal((await item.PATCH(request("PATCH", draft), context)).status, 503);
   assert.equal((await item.DELETE(request("DELETE"), context)).status, 503);
+});
+
+test("durable analytics uses confirmed results, allowlisted metadata and the existing addition UUID", async () => {
+  const events = [], order = [];
+  let originalCapture = null;
+  const database = {
+    rpc: async () => { order.push("durable"); return { data: [{ ...row, original_capture: originalCapture }], error: null }; },
+    from(table) {
+      if (table === "application_accounts") return { upsert(owner) {
+        assert.deepEqual(plain(owner), { user_id: "user_A" });
+        return { abortSignal: async () => ({ error: null }) };
+      } };
+      assert.equal(table, "experiment_events");
+      return { insert(rows) { order.push("analytics"); events.push(plain(rows)); return { abortSignal: async () => ({ error: null }) }; } };
+    },
+  };
+  const { POST } = load("app/api/tasks/route.ts", { env, createClient: () => database });
+  const body = { requestId, tasks: [draft] };
+  assert.equal((await POST(request("POST", body))).status, 200);
+  assert.deepEqual(events[0], [{ event_name: "task_added", source: "manual", task_count: 1, addition_request_id: requestId }]);
+  originalCapture = row.original_capture;
+  const capture = { ...body, originalCapture };
+  for (let i = 0; i < 2; i++) assert.equal((await POST(request("POST", capture))).status, 200);
+  assert.deepEqual(events[1], [
+    { event_name: "task_added", source: "capture", task_count: 1, addition_request_id: requestId },
+    { event_name: "capture_succeeded", task_count: 1, addition_request_id: requestId },
+  ]);
+  assert.deepEqual(events[1], events[2]); // SQL uniqueness handles the repeated insert.
+  assert.deepEqual(order, ["durable", "analytics", "durable", "analytics", "durable", "analytics"]);
+  database.rpc = async () => ({ data: [], error: null });
+  assert.equal((await POST(request("POST", capture))).status, 503);
+  assert.equal(events.length, 3);
+});
+
+test("analytics database errors never fail confirmed add/edit/delete, and 404s emit nothing", async () => {
+  const attempted = [];
+  let mutation = { data: row, error: null };
+  const query = { update() { return this; }, delete() { return this; }, eq() { return this; }, select() { return this; },
+    maybeSingle: async () => mutation };
+  const database = {
+    rpc: async () => ({ data: [row], error: null }),
+    from(table) {
+      if (table === "tasks") return query;
+      if (table === "application_accounts") return { upsert() { return { abortSignal: async () => ({ error: null }) }; } };
+      return { insert(events) {
+        attempted.push(plain(events));
+        return { abortSignal: async () => { throw new Error("Analytics unavailable"); } };
+      } };
+    },
+  };
+  const options = { env, createClient: () => database };
+  const root = load("app/api/tasks/route.ts", options);
+  const item = load("app/api/tasks/[id]/route.ts", options);
+  const context = { params: Promise.resolve({ id: "1" }) };
+  assert.equal((await root.POST(request("POST", { requestId, tasks: [draft], originalCapture: row.original_capture }))).status, 200);
+  assert.equal((await item.PATCH(request("PATCH", draft), context)).status, 200);
+  mutation = { data: { id: 1 }, error: null };
+  assert.equal((await item.DELETE(request("DELETE"), context)).status, 200);
+  assert.deepEqual(attempted.slice(1), [[{ event_name: "task_edited" }], [{ event_name: "task_deleted" }]]);
+  mutation = { data: null, error: null };
+  assert.equal((await item.PATCH(request("PATCH", draft), context)).status, 404);
+  assert.equal((await item.DELETE(request("DELETE"), context)).status, 404);
+  assert.equal(attempted.length, 3);
+  database.from = () => { throw new Error("Root unavailable"); };
+  assert.equal((await root.POST(request("POST", { requestId, tasks: [draft], originalCapture: row.original_capture }))).status, 200);
+});
+
+test("experiment contract rejects private fields and invalid metadata; browser endpoint excludes durable events", async () => {
+  const { parseExperimentEvent } = load("lib/experiment-events.ts");
+  const valid = [ { name: "task_added", source: "manual", task_count: 1 }, { name: "task_added", source: "capture", task_count: 20 },
+    { name: "capture_succeeded", task_count: 2 }, { name: "capture_failed", stage: "interpretation" },
+    { name: "capture_failed", stage: "persistence" }, ...["capture_submitted", "capture_clarification_requested", "context_interacted", "recommendation_surfaced", "task_edited", "task_deleted"].map(name => ({ name })) ];
+  for (const event of valid) {
+    assert.deepEqual(plain(parseExperimentEvent(event)), event);
+    for (const key of ["task", "name_text", "capture", "original_capture", "context", "recommendation", "explanation", "email", "payload", "user_id", "created_at"]) {
+      assert.throws(() => parseExperimentEvent({ ...event, [key]: "private" }));
+    }
+  }
+  for (const invalid of [null, [], { name: ["capture_submitted"] }, { name: "page_view" }, { name: "capture_failed" },
+    { name: "capture_failed", stage: ["interpretation"] }, { name: "capture_failed", stage: "database" },
+    { name: "task_added", source: "unknown", task_count: 1 }, { name: "capture_succeeded", task_count: 0 },
+    { name: "capture_succeeded", task_count: 21 }, { name: "capture_succeeded", task_count: 1.5 },
+    { name: "capture_succeeded", task_count: "2" }]) assert.throws(() => parseExperimentEvent(invalid));
+  const authRequired = load("app/api/experiment-events/route.ts", { auth: async () => ({ userId: null }) });
+  assert.equal((await authRequired.POST({ json() { assert.fail("Unauthenticated input"); } })).status, 401);
+  const endpoint = load("app/api/experiment-events/route.ts");
+  for (const event of valid.filter(e => ["task_added", "capture_succeeded", "task_edited", "task_deleted"].includes(e.name))) {
+    assert.equal((await endpoint.POST(request("POST", event))).status, 400);
+  }
+  assert.equal((await endpoint.POST(request("POST", { name: "capture_submitted" }, "https://foreign.example"))).status, 400);
+  assert.equal((await endpoint.POST(request("POST", { name: "capture_submitted", userId: "user_B" }))).status, 400);
+});
+
+test("browser analytics endpoint attaches authenticated root only and accepts unavailable telemetry without product errors", async () => {
+  const calls = [];
+  const database = { from(table) {
+    return { upsert(owner) { calls.push({ table, owner: plain(owner) }); return { abortSignal: async () => ({ error: null }) }; },
+      insert(events) { calls.push({ table, events: plain(events) }); return { abortSignal: async () => ({ error: { message: "private" } }) }; } };
+  } };
+  const { POST } = load("app/api/experiment-events/route.ts", { env, createClient: () => database });
+  const response = await POST(request("POST", { name: "capture_failed", stage: "interpretation" }));
+  assert.equal(response.status, 202);
+  assert.deepEqual(calls, [ { table: "application_accounts", owner: { user_id: "user_A" } },
+    { table: "experiment_events", events: [{ event_name: "capture_failed", stage: "interpretation" }] } ]);
+  assert.deepEqual(await response.json(), { accepted: true });
+  const unavailable = load("app/api/experiment-events/route.ts");
+  assert.equal((await unavailable.POST(request("POST", { name: "context_interacted" }))).status, 202);
 });

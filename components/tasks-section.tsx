@@ -9,6 +9,7 @@ import { parseTaskDraft } from "@/lib/task-storage";
 import type { TaskAddition } from "@/lib/task-storage";
 import { TaskApiError } from "@/lib/task-api";
 import { Button } from "@/components/ui/button";
+import type { BrowserExperimentEvent } from "@/lib/experiment-events";
 import {
   defaultTaskFormValues,
   Task,
@@ -22,6 +23,7 @@ type TasksSectionProps = {
   onAdd: (addition: TaskAddition) => Promise<void>;
   onEditTask: (id: number, draft: TaskAddition["tasks"][number]) => Promise<void>;
   onDeleteTask: (id: number) => Promise<void>;
+  onEvent?: (event: BrowserExperimentEvent) => void;
 };
 
 export function TasksSection({
@@ -31,6 +33,7 @@ export function TasksSection({
   onAdd,
   onEditTask,
   onDeleteTask,
+  onEvent,
 }: TasksSectionProps) {
   const [formValues, setFormValues] = useState<TaskFormValues>(defaultTaskFormValues);
   const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
@@ -192,7 +195,7 @@ export function TasksSection({
           </div>
         </div>
 
-        <CaptureForm ready={!busy && !saving && deletingId === null} blocked={unresolvedAddition || pendingAddition !== null} onSave={onAdd} />
+        <CaptureForm ready={!busy && !saving && deletingId === null} blocked={unresolvedAddition || pendingAddition !== null} onSave={onAdd} onEvent={onEvent} />
         {unresolvedAddition ? <p role="status" className="text-body-small text-content-secondary">An addition is awaiting confirmation. Use its Retry save before changing tasks. Reloading loads the server’s tasks and abandons this in-memory retry.</p> : null}
         {error ? <p role="alert" className="text-body-small text-status-danger-text">{error}</p> : null}
 
