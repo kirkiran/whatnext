@@ -35,42 +35,6 @@ export type CurrentContext = {
   location: LocationOption;
 };
 
-export const sampleTasks: Task[] = [
-  {
-    id: 1,
-    name: "Pack daycare bag",
-    duration: 10,
-    urgency: "high",
-    importance: "high",
-    focusRequired: "low",
-    contextTag: "home",
-    readiness: "ready",
-    canBeDoneInParts: "no",
-  },
-  {
-    id: 2,
-    name: "Reply to school email",
-    duration: 15,
-    urgency: "medium",
-    importance: "high",
-    focusRequired: "medium",
-    contextTag: "desk",
-    readiness: "blocked",
-    canBeDoneInParts: "no",
-  },
-  {
-    id: 3,
-    name: "Take a quick walk with the stroller",
-    duration: 20,
-    urgency: "low",
-    importance: "medium",
-    focusRequired: "medium",
-    contextTag: "outside",
-    readiness: "ready",
-    canBeDoneInParts: "yes",
-  },
-];
-
 export const defaultTaskFormValues: TaskFormValues = {
   name: "",
   duration: "15",

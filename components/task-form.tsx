@@ -14,6 +14,9 @@ import {
 } from "@/lib/whatnext-data";
 
 type TaskFormProps = {
+  saving?: boolean;
+  locked?: boolean;
+  retry?: boolean;
   editingTaskId: number | null;
   formValues: TaskFormValues;
   nameInputRef: Ref<HTMLInputElement>;
@@ -23,6 +26,9 @@ type TaskFormProps = {
 };
 
 export function TaskForm({
+  saving = false,
+  locked = false,
+  retry = false,
   editingTaskId,
   formValues,
   nameInputRef,
@@ -49,7 +55,7 @@ export function TaskForm({
           </p>
         </div>
 
-        <div className="grid gap-ds-4 md:grid-cols-2 xl:grid-cols-4">
+        <fieldset disabled={locked} className="grid gap-ds-4 md:grid-cols-2 xl:grid-cols-4">
           <FormField className="md:col-span-2 xl:col-span-4">
             <FormLabel htmlFor="name">Task name</FormLabel>
             <Input
@@ -57,6 +63,8 @@ export function TaskForm({
               id="name"
               name="name"
               type="text"
+              maxLength={500}
+              required
               value={formValues.name}
               onChange={onChange}
               placeholder="Enter a task"
@@ -69,7 +77,9 @@ export function TaskForm({
               id="duration"
               name="duration"
               type="number"
-              min="1"
+              min="0"
+              step="any"
+              required
               value={formValues.duration}
               onChange={onChange}
             />
@@ -129,13 +139,13 @@ export function TaskForm({
             value={formValues.canBeDoneInParts}
             onChange={onChange}
           />
-        </div>
+        </fieldset>
 
         <div className="flex flex-wrap gap-ds-3">
-          <Button type="submit" variant="primary">
-            {isEditing ? "Save task" : "Add task"}
+          <Button type="submit" variant="primary" disabled={locked && !retry} isLoading={saving} loadingLabel="Saving task">
+            {retry ? "Retry save" : isEditing ? "Save task" : "Add task"}
           </Button>
-          <Button type="button" variant="tertiary" onClick={onCancel}>
+          <Button type="button" variant="tertiary" disabled={locked} onClick={onCancel}>
             Cancel
           </Button>
         </div>

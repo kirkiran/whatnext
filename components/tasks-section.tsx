@@ -1,11 +1,13 @@
 "use client";
 
 import { ChangeEvent, FormEvent, MouseEvent, useEffect, useRef, useState } from "react";
-import { Plus, RotateCcw } from "lucide-react";
+import { Plus } from "lucide-react";
 import { TaskForm } from "@/components/task-form";
 import { TaskList } from "@/components/task-list";
 import { CaptureForm } from "@/components/capture-form";
-import type { CaptureTaskDraft } from "@/lib/capture";
+import { parseTaskDraft } from "@/lib/task-storage";
+import type { TaskAddition } from "@/lib/task-storage";
+import { TaskApiError } from "@/lib/task-api";
 import { Button } from "@/components/ui/button";
 import {
   defaultTaskFormValues,
@@ -15,22 +17,30 @@ import {
 
 type TasksSectionProps = {
   tasks: Task[];
-  setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
-  onResetSampleTasks: () => void;
-  captureReady: boolean;
-  onSaveCapture: (drafts: CaptureTaskDraft[], originalCapture: string) => void;
+  busy: boolean;
+  unresolvedAddition: boolean;
+  onAdd: (addition: TaskAddition) => Promise<void>;
+  onEditTask: (id: number, draft: TaskAddition["tasks"][number]) => Promise<void>;
+  onDeleteTask: (id: number) => Promise<void>;
 };
 
 export function TasksSection({
   tasks,
-  setTasks,
-  onResetSampleTasks,
-  captureReady,
-  onSaveCapture,
+  busy,
+  unresolvedAddition,
+  onAdd,
+  onEditTask,
+  onDeleteTask,
 }: TasksSectionProps) {
   const [formValues, setFormValues] = useState<TaskFormValues>(defaultTaskFormValues);
   const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [pendingAddition, setPendingAddition] = useState<TaskAddition | null>(null);
+  const inFlight = useRef(false);
+  const locked = busy || unresolvedAddition || saving || deletingId !== null;
   const addTaskButtonRef = useRef<HTMLButtonElement>(null);
   const taskNameInputRef = useRef<HTMLInputElement>(null);
   const formOpenerRef = useRef<HTMLButtonElement | null>(null);
@@ -60,6 +70,8 @@ export function TasksSection({
   }
 
   function handleOpenAddTask() {
+    if (locked) return;
+    setError("");
     formOpenerRef.current = addTaskButtonRef.current;
     setFormValues(defaultTaskFormValues);
     setEditingTaskId(null);
@@ -70,39 +82,45 @@ export function TasksSection({
     }
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-
-    const trimmedName = formValues.name.trim();
-
-    if (!trimmedName) {
+    if (inFlight.current || busy || (unresolvedAddition && !pendingAddition)) return;
+    let draft;
+    try {
+      draft = parseTaskDraft({ ...formValues, duration: Number(formValues.duration) });
+    } catch {
+      setError("Enter a task name of at most 500 characters and a positive duration.");
       return;
     }
-
-    const nextTask: Task = {
-      id: editingTaskId ?? Date.now(),
-      name: trimmedName,
-      duration: Number(formValues.duration),
-      urgency: formValues.urgency,
-      importance: formValues.importance,
-      focusRequired: formValues.focusRequired,
-      contextTag: formValues.contextTag,
-      readiness: formValues.readiness,
-      canBeDoneInParts: formValues.canBeDoneInParts,
-    };
-
-    if (editingTaskId !== null) {
-      setTasks((currentTasks) =>
-        currentTasks.map((task) => (task.id === editingTaskId ? { ...task, ...nextTask } : task)),
-      );
-    } else {
-      setTasks((currentTasks) => [nextTask, ...currentTasks]);
-    }
-
-    closeFormAndReturnFocus();
+    inFlight.current = true;
+    setSaving(true);
+    setError("");
+    try {
+      if (editingTaskId !== null) {
+        await onEditTask(editingTaskId, draft);
+      } else {
+        const addition = pendingAddition ?? { requestId: crypto.randomUUID(), tasks: [draft] };
+        setPendingAddition(addition);
+        try { await onAdd(addition); }
+        catch (failure) {
+          if (failure instanceof TaskApiError && failure.status === 400) setPendingAddition(null);
+          throw failure;
+        }
+        setPendingAddition(null);
+      }
+      closeFormAndReturnFocus();
+    } catch (failure) {
+      setError(failure instanceof TaskApiError && failure.status === 404
+        ? "This task is no longer available. Your changes are still here. Cancel to return to your tasks."
+        : failure instanceof TaskApiError && failure.status === 400
+          ? "Check the task details and try again. Your input is still here."
+          : "Could not confirm the save. Your input is still here. Try again.");
+    } finally { inFlight.current = false; setSaving(false); }
   }
 
   function handleEdit(task: Task, event: MouseEvent<HTMLButtonElement>) {
+    if (locked) return;
+    setError("");
     formOpenerRef.current = event.currentTarget;
     setEditingTaskId(task.id);
     setFormValues({
@@ -122,16 +140,24 @@ export function TasksSection({
     }
   }
 
-  function handleDelete(taskId: number) {
-    setTasks((currentTasks) => currentTasks.filter((task) => task.id !== taskId));
-
-    if (editingTaskId === taskId) {
-      formOpenerRef.current = addTaskButtonRef.current;
-      closeFormAndReturnFocus();
-    }
+  async function handleDelete(taskId: number) {
+    if (inFlight.current || locked) return;
+    inFlight.current = true;
+    setDeletingId(taskId);
+    setError("");
+    try {
+      await onDeleteTask(taskId);
+      if (editingTaskId === taskId) {
+        formOpenerRef.current = addTaskButtonRef.current;
+        closeFormAndReturnFocus();
+      }
+    } catch {
+      setError("Could not confirm deletion. Refresh tasks or try Delete again.");
+    } finally { inFlight.current = false; setDeletingId(null); }
   }
 
   function closeFormAndReturnFocus() {
+    setError("");
     setFormValues(defaultTaskFormValues);
     setEditingTaskId(null);
     shouldReturnFocusRef.current = true;
@@ -152,12 +178,9 @@ export function TasksSection({
           </div>
 
           <div className="flex flex-wrap items-center gap-ds-2 sm:justify-end">
-            <Button variant="tertiary" onClick={onResetSampleTasks}>
-              <RotateCcw aria-hidden="true" className="size-icon-compact" />
-              Reset sample tasks
-            </Button>
             <Button
               ref={addTaskButtonRef}
+              disabled={locked || pendingAddition !== null}
               variant="primary"
               aria-controls="task-form"
               aria-expanded={isFormOpen}
@@ -169,10 +192,15 @@ export function TasksSection({
           </div>
         </div>
 
-        <CaptureForm ready={captureReady} onSave={onSaveCapture} />
+        <CaptureForm ready={!busy && !saving && deletingId === null} blocked={unresolvedAddition || pendingAddition !== null} onSave={onAdd} />
+        {unresolvedAddition ? <p role="status" className="text-body-small text-content-secondary">An addition is awaiting confirmation. Use its Retry save before changing tasks. Reloading loads the server’s tasks and abandons this in-memory retry.</p> : null}
+        {error ? <p role="alert" className="text-body-small text-status-danger-text">{error}</p> : null}
 
         {isFormOpen ? (
           <TaskForm
+            saving={saving}
+            locked={locked || pendingAddition !== null}
+            retry={pendingAddition !== null}
             editingTaskId={editingTaskId}
             formValues={formValues}
             nameInputRef={taskNameInputRef}
@@ -183,6 +211,8 @@ export function TasksSection({
         ) : null}
 
         <TaskList
+          disabled={locked || pendingAddition !== null}
+          deletingId={deletingId}
           editingTaskId={editingTaskId}
           isFormOpen={isFormOpen}
           tasks={tasks}

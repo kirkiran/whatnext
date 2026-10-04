@@ -1,5 +1,9 @@
 # RUR Slice 2 — identity and database boundary
 
+This document records the Slice 2 baseline and its validation. Slice 3's UI
+integration is documented in `rur-slice-3.md`; the localStorage/sample behavior
+described below is historical, not the current task authority.
+
 This slice adds Clerk authentication, an authenticated task API, and a reviewable
 Supabase migration. It does **not** connect the current product UI to durable tasks.
 The page still uses prototype localStorage, sample tasks, and persisted context;

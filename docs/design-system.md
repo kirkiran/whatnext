@@ -77,7 +77,7 @@ Locked v1 behavior includes:
 - Readiness and blocking behavior
 - Partial-progress behavior
 - Interruption-risk behavior
-- Browser persistence
+- Authenticated durable task persistence; transient Current Context (RUR Slice 3 supersedes prototype browser persistence)
 - No-suitable-task behavior
 - AI explanation and fallback behavior
 - Suggested Plan behavior
@@ -493,7 +493,7 @@ Contains:
 - Typographic EegEnu identity
 - Supporting product statement where appropriate
 
-Reset sample tasks belongs with the Your Tasks management controls. Treat it as a low-emphasis task-management and demo utility, not as a global product action.
+The real-user workspace has no sample-task reset or restore action. RUR Slice 3 supersedes the prototype demo utility.
 
 Use a typographic EegEnu wordmark for v1. Do not invent a permanent logo, leaf mark, sidebar navigation, tabs, account menu, or mobile navigation.
 

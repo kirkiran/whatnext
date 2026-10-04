@@ -16,6 +16,8 @@ import {
 } from "@/lib/whatnext-data";
 
 type TaskListProps = {
+  disabled?: boolean;
+  deletingId?: number | null;
   editingTaskId: number | null;
   isFormOpen: boolean;
   tasks: Task[];
@@ -24,6 +26,8 @@ type TaskListProps = {
 };
 
 export function TaskList({
+  disabled = false,
+  deletingId = null,
   editingTaskId,
   isFormOpen,
   tasks,
@@ -36,7 +40,7 @@ export function TaskList({
         <div className="space-y-ds-1 rounded-card border border-line-subtle bg-surface-secondary p-ds-5">
           <p className="text-component-title text-content-primary">No tasks yet</p>
           <p className="text-body-small text-content-secondary">
-            Add a task when you’re ready, or restore the sample tasks.
+            Capture an intention or add a task when you’re ready.
           </p>
         </div>
       ) : (
@@ -89,6 +93,7 @@ export function TaskList({
                 <div className="flex shrink-0 gap-ds-2">
                   <Button
                     type="button"
+                    disabled={disabled}
                     variant="tertiary"
                     aria-controls="task-form"
                     aria-expanded={isFormOpen && editingTaskId === task.id}
@@ -99,6 +104,9 @@ export function TaskList({
                   </Button>
                   <Button
                     type="button"
+                    disabled={disabled}
+                    isLoading={deletingId === task.id}
+                    loadingLabel="Deleting task"
                     variant="destructive"
                     onClick={() => onDelete(task.id)}
                   >
