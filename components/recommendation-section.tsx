@@ -66,7 +66,7 @@ export function RecommendationSection({
             Recommended Next Action
           </h2>
           <p className="text-body-small text-content-secondary">
-            Here’s what fits your current situation.
+            {tasks.length === 0 ? "Your tasks and Current Context work together here." : "Here’s what fits your current situation."}
           </p>
         </div>
 
@@ -152,10 +152,12 @@ export function RecommendationSection({
         ) : (
           <div className="border-t border-line-subtle pt-ds-5">
             <p className="text-component-title text-content-primary">
-              No recommendation available
+              {tasks.length === 0 ? "Capture something to get started." : "No recommendation available"}
             </p>
             <p className="mt-ds-2 max-w-md text-body-small text-content-secondary">
-              No suitable task found for current context
+              {tasks.length === 0
+                ? "Once you have a task, EegEnu can recommend what fits your Current Context."
+                : "No suitable task found for current context"}
             </p>
           </div>
         )}

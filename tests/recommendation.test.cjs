@@ -61,7 +61,8 @@ test("empty and ineligible tasks produce no recommendation", () => {
     task(1, { readiness: "blocked" }), task(2, { contextTag: "desk" }),
     task(3, { duration: 21 }),
   ], context), null);
-  assert.match(textContent(RecommendationSection({ tasks: [], context })), /No recommendation available/);
+  assert.match(textContent(RecommendationSection({ tasks: [], context })), /Capture something to get started/);
+  assert.match(textContent(RecommendationSection({ tasks: [task(1, { readiness: "blocked" })], context })), /No recommendation available/);
 });
 
 test("location and time filters allow flexible tasks and partial progress", () => {

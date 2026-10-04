@@ -5,6 +5,7 @@ import Link from "next/link";
 import { CurrentContextSection } from "@/components/current-context-section";
 import { RecommendationSection } from "@/components/recommendation-section";
 import { TasksSection } from "@/components/tasks-section";
+import { EmptyWorkspaceWelcome } from "@/components/empty-workspace-welcome";
 import { Button } from "@/components/ui/button";
 import { defaultContext } from "@/lib/whatnext-data";
 import type { CurrentContext } from "@/lib/whatnext-data";
@@ -17,6 +18,7 @@ export function TaskWorkspace({ isCurrentUser }: { isCurrentUser: () => boolean 
   const [context, setContext] = useState<CurrentContext>(defaultContext);
   const [state, setState] = useState<TaskState>({ tasks: null, loading: true, refreshing: false, busy: false, error: "", unauthorized: false, unresolvedAddition: false });
   const controllerRef = useRef<ReturnType<typeof createDurableTasks> | null>(null);
+  const captureInputRef = useRef<HTMLTextAreaElement>(null);
   const identityCheckRef = useRef(isCurrentUser);
   identityCheckRef.current = isCurrentUser;
   function onEvent(event: BrowserExperimentEvent) {
@@ -31,9 +33,17 @@ export function TaskWorkspace({ isCurrentUser }: { isCurrentUser: () => boolean 
     return () => { controller.dispose(); controllerRef.current = null; window.removeEventListener("focus", onFocus); };
   }, []);
   if (state.unauthorized) return <p role="alert">Sign in to continue. <Link href="/sign-in" className="underline">Sign in</Link></p>;
+  const isEmpty = state.tasks !== null && state.tasks.length === 0;
+  function startCapture() {
+    const input = captureInputRef.current;
+    if (!input || input.disabled) return;
+    input.focus({ preventScroll: true });
+    input.scrollIntoView({ block: "center", behavior: "auto" });
+  }
   return (
     <section className="flex flex-col gap-ds-6">
-      <CurrentContextSection context={context} setContext={setContext} onInteract={() => onEvent({ name: "context_interacted" })} />
+      {isEmpty ? <EmptyWorkspaceWelcome onStartCapture={startCapture} disabled={state.busy || state.unresolvedAddition} /> : null}
+      <CurrentContextSection isEmpty={isEmpty} context={context} setContext={setContext} onInteract={() => onEvent({ name: "context_interacted" })} />
       {state.tasks === null ? (
         <section className="rounded-card border border-line bg-surface-primary p-ds-5" aria-busy={state.loading}>
           <h2 className="text-section-title">Your Tasks</h2>
@@ -43,11 +53,12 @@ export function TaskWorkspace({ isCurrentUser }: { isCurrentUser: () => boolean 
       ) : (
         <>
           <RecommendationSection tasks={state.tasks} context={context} onSurface={() => onEvent({ name: "recommendation_surfaced" })} />
-          <div className="flex flex-wrap items-center gap-ds-3">
+          {!isEmpty || state.error ? <div className="flex flex-wrap items-center gap-ds-3">
             <Button disabled={state.busy} isLoading={state.refreshing} loadingLabel="Refreshing tasks" onClick={() => void controllerRef.current?.refresh()}>Refresh tasks</Button>
             <p role="status" className="text-body-small text-content-secondary">{state.error}</p>
-          </div>
+          </div> : null}
           <TasksSection tasks={state.tasks} busy={state.busy} unresolvedAddition={state.unresolvedAddition}
+            captureInputRef={captureInputRef}
             onEvent={onEvent}
             onAdd={addition => controllerRef.current!.add(addition)}
             onEditTask={(id, draft) => controllerRef.current!.edit(id, draft)}

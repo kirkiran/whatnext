@@ -22,12 +22,14 @@ import {
 } from "@/lib/whatnext-data";
 
 type CurrentContextSectionProps = {
+  isEmpty?: boolean;
   context: CurrentContext;
   setContext: React.Dispatch<React.SetStateAction<CurrentContext>>;
   onInteract?: () => void;
 };
 
 export function CurrentContextSection({
+  isEmpty = false,
   context,
   setContext,
   onInteract,
@@ -51,7 +53,9 @@ export function CurrentContextSection({
             Current Context
           </h2>
           <p className="text-body-small text-content-secondary">
-            Tell EegEnu what your situation is right now.
+            {isEmpty
+              ? "Check these starting choices against your situation. Recommendations update automatically as you change them."
+              : "Tell EegEnu what your situation is right now."}
           </p>
         </div>
 

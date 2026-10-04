@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, FormEvent, MouseEvent, useEffect, useRef, useState } from "react";
+import { ChangeEvent, FormEvent, MouseEvent, RefObject, useEffect, useRef, useState } from "react";
 import { Plus } from "lucide-react";
 import { TaskForm } from "@/components/task-form";
 import { TaskList } from "@/components/task-list";
@@ -17,6 +17,7 @@ import {
 } from "@/lib/whatnext-data";
 
 type TasksSectionProps = {
+  captureInputRef?: RefObject<HTMLTextAreaElement | null>;
   tasks: Task[];
   busy: boolean;
   unresolvedAddition: boolean;
@@ -27,6 +28,7 @@ type TasksSectionProps = {
 };
 
 export function TasksSection({
+  captureInputRef,
   tasks,
   busy,
   unresolvedAddition,
@@ -176,7 +178,9 @@ export function TasksSection({
               Your Tasks ({tasks.length})
             </h2>
             <p className="text-body-small text-content-secondary">
-              Blocked tasks stay visible, but they are skipped for recommendations.
+              {tasks.length === 0
+                ? "Start with one thing you want to get done. Capture turns your words into tasks you can edit."
+                : "Blocked tasks stay visible, but they are skipped for recommendations."}
             </p>
           </div>
 
@@ -184,7 +188,7 @@ export function TasksSection({
             <Button
               ref={addTaskButtonRef}
               disabled={locked || pendingAddition !== null}
-              variant="primary"
+              variant={tasks.length === 0 ? "secondary" : "primary"}
               aria-controls="task-form"
               aria-expanded={isFormOpen}
               onClick={handleOpenAddTask}
@@ -195,7 +199,7 @@ export function TasksSection({
           </div>
         </div>
 
-        <CaptureForm ready={!busy && !saving && deletingId === null} blocked={unresolvedAddition || pendingAddition !== null} onSave={onAdd} onEvent={onEvent} />
+        <CaptureForm isEmpty={tasks.length === 0} inputRef={captureInputRef} ready={!busy && !saving && deletingId === null} blocked={unresolvedAddition || pendingAddition !== null} onSave={onAdd} onEvent={onEvent} />
         {unresolvedAddition ? <p role="status" className="text-body-small text-content-secondary">An addition is awaiting confirmation. Use its Retry save before changing tasks. Reloading loads the server’s tasks and abandons this in-memory retry.</p> : null}
         {error ? <p role="alert" className="text-body-small text-status-danger-text">{error}</p> : null}
 

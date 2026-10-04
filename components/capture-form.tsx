@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useRef, useState } from "react";
+import { FormEvent, RefObject, useRef, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { controlClassName } from "@/components/ui/control-styles";
@@ -10,13 +10,15 @@ import { TaskApiError } from "@/lib/task-api";
 import type { BrowserExperimentEvent } from "@/lib/experiment-events";
 
 type CaptureFormProps = {
+  isEmpty?: boolean;
+  inputRef?: RefObject<HTMLTextAreaElement | null>;
   ready: boolean;
   blocked?: boolean;
   onSave: (addition: TaskAddition) => Promise<void>;
   onEvent?: (event: BrowserExperimentEvent) => void;
 };
 
-export function CaptureForm({ ready, blocked = false, onSave, onEvent }: CaptureFormProps) {
+export function CaptureForm({ isEmpty = false, inputRef, ready, blocked = false, onSave, onEvent }: CaptureFormProps) {
   const [capture, setCapture] = useState("");
   const [isInterpreting, setIsInterpreting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -99,16 +101,20 @@ export function CaptureForm({ ready, blocked = false, onSave, onEvent }: Capture
         Capture what you need to do
       </label>
       <textarea
+        ref={inputRef}
         id="capture"
         value={capture}
         onChange={(event) => setCapture(event.target.value)}
         maxLength={MAX_CAPTURE_LENGTH}
         rows={3}
         disabled={isInterpreting || isSaving || pendingAddition !== null}
-        aria-describedby="capture-help capture-status"
+        aria-describedby={`capture-help capture-status${isEmpty ? " capture-example" : ""}`}
         placeholder="One intention or a short brain dump…"
         className={`${controlClassName} py-ds-3 placeholder:text-content-muted`}
       />
+      {isEmpty ? <p id="capture-example" className="text-body-small text-content-secondary">
+        For example: “Call the dentist to book a checkup.”
+      </p> : null}
       <p id="capture-help" className="text-metadata text-content-muted">
         Capture sends your text to OpenAI for AI interpretation and estimates missing task details. This adds tasks; it does not schedule reminders or calendar events. <Link href="/privacy" className="underline">Privacy</Link>
       </p>

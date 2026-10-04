@@ -264,17 +264,125 @@ test("workspace distinguishes loading/failure/empty and never accesses legacy br
   assert.match(JSON.stringify(render()), /Loading tasks and recommendations/);
   assert.equal(find(render(), "RecommendationSection"), undefined);
   assert.equal(find(render(), "TasksSection"), undefined);
+  assert.equal(find(render(), "EmptyWorkspaceWelcome"), undefined);
   h.effects();
   resolve(new Response("", { status: 503 }));
   await new Promise(done => setImmediate(done));
   assert.match(JSON.stringify(render()), /Could not load tasks/);
+  assert.equal(find(render(), "EmptyWorkspaceWelcome"), undefined);
   assert.equal(find(render(), "TasksSection"), undefined);
+  assert.equal(find(render(), "Button").props.children, "Retry");
   find(render(), "Button").props.onClick();
   resolve(Response.json({ tasks: [] }));
   await new Promise(done => setImmediate(done));
   assert.deepEqual(plain(find(render(), "TasksSection").props.tasks), []);
   assert.ok(find(render(), "RecommendationSection"));
+  assert.ok(find(render(), "EmptyWorkspaceWelcome"));
+  assert.doesNotMatch(JSON.stringify(render()), /Refresh tasks/);
   assert.ok(focus.has("focus"));
+  focus.get("focus")();
+  resolve(new Response("", { status: 503 }));
+  await new Promise(done => setImmediate(done));
+  assert.equal(find(render(), "Button").props.children, "Refresh tasks");
+  find(render(), "Button").props.onClick();
+  resolve(Response.json({ tasks: [] }));
+  await new Promise(done => setImmediate(done));
+  assert.doesNotMatch(JSON.stringify(render()), /Refresh tasks/);
+});
+
+test("empty workspace navigates to existing Capture and changes only after confirmed persistence", async () => {
+  let confirmAdd;
+  const h = harness("components/task-workspace.tsx", {
+    window: { addEventListener() {}, removeEventListener() {} },
+    fetch: async (_url, options) => {
+      if (options.method === "POST") return new Promise(resolve => { confirmAdd = resolve; });
+      if (options.method === "DELETE") return Response.json({ deleted: true });
+      return Response.json({ tasks: [] });
+    },
+  });
+  const render = () => h.render("TaskWorkspace", { isCurrentUser: () => true });
+  render(); h.effects(); await new Promise(resolve => setImmediate(resolve));
+  const empty = render();
+  const entry = find(empty, "TasksSection");
+  const calls = [];
+  entry.props.captureInputRef.current = {
+    disabled: false,
+    focus: options => calls.push(["focus", plain(options)]),
+    scrollIntoView: options => calls.push(["scroll", plain(options)]),
+  };
+  find(empty, "EmptyWorkspaceWelcome").props.onStartCapture();
+  assert.deepEqual(calls, [["focus", { preventScroll: true }], ["scroll", { block: "center", behavior: "auto" }]]);
+  entry.props.captureInputRef.current.disabled = true;
+  find(empty, "EmptyWorkspaceWelcome").props.onStartCapture();
+  assert.equal(calls.length, 2);
+  entry.props.captureInputRef.current.disabled = false;
+  const saving = entry.props.onAdd({ requestId: "1f74921f-177a-4ed3-b215-43773d631c3e", tasks: [draft] });
+  assert.ok(find(render(), "EmptyWorkspaceWelcome"));
+  confirmAdd(Response.json({ tasks: [{ ...draft, id: 7 }] })); await saving;
+  const populated = render();
+  assert.equal(find(populated, "Button").props.children, "Refresh tasks");
+  assert.equal(find(populated, "EmptyWorkspaceWelcome"), undefined);
+  assert.equal(find(populated, "CurrentContextSection").props.isEmpty, false);
+  assert.equal(find(populated, "TasksSection").props.captureInputRef, entry.props.captureInputRef);
+  // The conditional welcome occupies its own slot; the persistent sections keep their positions.
+  assert.equal(empty.props.children[1].type, populated.props.children[1].type);
+  const sections = tree => tree.props.children[2].props.children;
+  assert.equal(sections(empty)[0].type, sections(populated)[0].type);
+  assert.equal(sections(empty)[2].type, sections(populated)[2].type);
+  await find(populated, "TasksSection").props.onDeleteTask(7);
+  assert.ok(find(render(), "EmptyWorkspaceWelcome"));
+});
+
+test("zero-task presentation teaches the flow and retains manual entry without duplicate empty content", () => {
+  const welcome = harness("components/empty-workspace-welcome.tsx").render("EmptyWorkspaceWelcome", { onStartCapture() {}, disabled: false });
+  assert.match(JSON.stringify(welcome), /Not sure what to do next\?/);
+  assert.match(JSON.stringify(welcome), /based on what you need to get done and your situation right now/);
+  const steps = find(welcome, "ol").props.children;
+  assert.deepEqual(plain(steps.map(step => find(step, "h3").props.children)), ["Capture", "Current Context", "Recommended Next Action"]);
+  assert.equal(find(welcome, "Button").props.children, "Start with Capture");
+  const h = harness("components/tasks-section.tsx");
+  const props = { tasks: [], busy: false, unresolvedAddition: false, onAdd() {}, onEditTask() {}, onDeleteTask() {} };
+  const empty = h.render("TasksSection", props);
+  assert.match(JSON.stringify(empty), /Start with one thing/);
+  assert.equal(find(empty, "Button").props.variant, "secondary");
+  assert.equal(find(empty, "CaptureForm").props.isEmpty, true);
+  const populated = h.render("TasksSection", { ...props, tasks: [{ ...draft, id: 7 }] });
+  assert.match(JSON.stringify(populated), /Blocked tasks stay visible/);
+  assert.equal(find(populated, "Button").props.variant, "primary");
+  assert.equal(find(populated, "CaptureForm").props.isEmpty, false);
+  assert.equal(find(empty, "CaptureForm").type, find(populated, "CaptureForm").type);
+  assert.equal(harness("components/task-list.tsx").render("TaskList", { tasks: [] }), null);
+});
+
+test("Capture keeps unsaved input and success feedback when zero-task guidance disappears", async () => {
+  const h = harness("components/capture-form.tsx", { fetch: async () => Response.json(success()) });
+  const inputRef = { current: null };
+  const props = { ready: true, isEmpty: true, inputRef, onSave: async () => {} };
+  let tree = h.render("CaptureForm", props);
+  assert.equal(find(tree, "textarea").props.ref, inputRef);
+  assert.match(find(tree, "textarea").props["aria-describedby"], /capture-example/);
+  assert.match(JSON.stringify(tree), /Call the dentist/);
+  find(tree, "textarea").props.onChange({ target: { value: original } });
+  tree = h.render("CaptureForm", { ...props, isEmpty: false });
+  assert.equal(find(tree, "textarea").props.value, original);
+  assert.doesNotMatch(JSON.stringify(tree), /capture-example|Call the dentist/);
+  await find(tree, "form").props.onSubmit(submit);
+  tree = h.render("CaptureForm", { ...props, isEmpty: false });
+  assert.match(JSON.stringify(tree), /Added 1 task/);
+});
+
+test("zero-task context and recommendation guidance is distinct from populated and no-match states", () => {
+  const context = { timeAvailable: "20", currentFocus: "medium", interruptionRisk: "low", location: "home" };
+  const c = harness("components/current-context-section.tsx");
+  assert.match(JSON.stringify(c.render("CurrentContextSection", { context, isEmpty: true })), /Check these starting choices/);
+  assert.doesNotMatch(JSON.stringify(c.render("CurrentContextSection", { context, isEmpty: false })), /starting choices/);
+  const r = harness("components/recommendation-section.tsx");
+  const empty = JSON.stringify(r.render("RecommendationSection", { tasks: [], context }));
+  assert.match(empty, /Capture something to get started/);
+  assert.doesNotMatch(empty, /No suitable task|No recommendation available/);
+  const noMatch = JSON.stringify(r.render("RecommendationSection", { tasks: [{ ...draft, id: 7, readiness: "blocked" }], context }));
+  assert.match(noMatch, /No suitable task found/);
+  assert.doesNotMatch(noMatch, /Capture something to get started/);
 });
 
 test("account change remounts the workspace and invalidates old callbacks before effect cleanup", () => {
