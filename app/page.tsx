@@ -4,6 +4,7 @@ import { useAuth } from "@clerk/nextjs";
 import { useRef } from "react";
 import { AppHeader } from "@/components/app-header";
 import { AccountWorkspace } from "@/components/account-workspace";
+import { LegalLinks } from "@/components/legal-links";
 
 export default function HomePage() {
   const { isLoaded, userId } = useAuth();
@@ -20,6 +21,7 @@ export default function HomePage() {
         ) : (
           <p role="status">Sign in to continue.</p>
         )}
+        <LegalLinks />
       </div>
     </main>
   );

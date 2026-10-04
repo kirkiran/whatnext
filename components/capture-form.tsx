@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useRef, useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { controlClassName } from "@/components/ui/control-styles";
 import { MAX_CAPTURE_LENGTH, parseCaptureResult } from "@/lib/capture";
@@ -109,7 +110,7 @@ export function CaptureForm({ ready, blocked = false, onSave, onEvent }: Capture
         className={`${controlClassName} py-ds-3 placeholder:text-content-muted`}
       />
       <p id="capture-help" className="text-metadata text-content-muted">
-        EegEnu interprets task details and estimates what’s missing. This adds tasks; it does not schedule reminders or calendar events.
+        Capture sends your text to OpenAI for AI interpretation and estimates missing task details. This adds tasks; it does not schedule reminders or calendar events. <Link href="/privacy" className="underline">Privacy</Link>
       </p>
       <Button type="submit" variant="primary" disabled={!ready || isInterpreting || isSaving || (blocked && !pendingAddition) || !capture.trim()}>
         {isInterpreting ? "Interpreting…" : isSaving ? "Saving…" : pendingAddition ? "Retry save" : "Capture"}
